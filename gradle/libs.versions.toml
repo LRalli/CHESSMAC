@@ -23,6 +23,9 @@ androidx-lifecycle-viewModelCompose = { group = "androidx.lifecycle", name = "li
 androidx-compose-material = { group = "androidx.compose.material", name = "material", version.ref = "androidxComposeMaterial"  }
 chess = { group = "com.github.bhlangonijr", name = "chesslib", version.ref = "chesslib"}
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxImmutableCollections" }
+ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+material3 = { group = "androidx.compose.material3", name = "material3" }
 
 [plugins]
 android-app = { id = "com.android.application", version.ref = "android-gradle" }

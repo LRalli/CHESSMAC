@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Stable
 fun interface PromotionPaneListener {
-    fun onPromotionPieceTypeSelected(pieceType: PieceType)
+    fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String)
 }
 
 @Composable
@@ -35,12 +35,25 @@ fun PromotionPane(
             .padding(6.dp)
 
         promotions.forEach { pieceType ->
+            val promotionString = getPromotionString(pieceType)
             PieceImage(
                 pieceType = pieceType,
                 modifier = itemModifier
-                    .clickable { listener.onPromotionPieceTypeSelected(pieceType) }
+                    .clickable { listener.onPromotionPieceTypeSelected(pieceType, promotionString) }
             )
         }
+    }
+}
+
+private fun getPromotionString(pieceType: PieceType): String {
+    // Implement logic to convert PieceType to promotion string (e.g., "R" or "r")
+    // You might need to adjust this based on your PieceType implementation.
+    return when (pieceType) {
+        PieceType.QUEEN_DARK, PieceType.QUEEN_LIGHT -> "Q"
+        PieceType.ROOK_DARK, PieceType.ROOK_LIGHT -> "R"
+        PieceType.BISHOP_DARK, PieceType.BISHOP_LIGHT -> "B"
+        PieceType.KNIGHT_DARK, PieceType.KNIGHT_LIGHT -> "N"
+        else -> throw IllegalArgumentException("Unsupported piece type: $pieceType")
     }
 }
 
@@ -55,7 +68,7 @@ fun PromotionPanePreview() {
             PieceType.KNIGHT_LIGHT
         ).toImmutableList(),
         cellSize = 78.dp,
-        listener = {},
+        listener = {_, _ ->},
         modifier = Modifier
             .background(Color.White)
             .border(2.dp, color = Color.DarkGray)

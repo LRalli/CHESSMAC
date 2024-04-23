@@ -18,19 +18,45 @@ import com.example.chessmac.ui.utils.isLongCastleMove
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.InputStreamReader
+import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 
-class ChessGameViewModel : ViewModel(), ChessBoardListener {
+class ChessGameViewModel: ViewModel(), ChessBoardListener {
+    private var isQuiz: Boolean = false
+    private var isLocal: Boolean = false
+
     private val chessBoard = ChessBoard()
-    private val board by lazy { Board() }
+    private var board = Board()
     private var selectedCell: Square? = null
     private var pieceId = 0
     private var promotionMoves: List<Move> = emptyList()
+    var currentSideToMove: String? = null
+    private var fenString = ""
+    var quizAttempts = 2
+    var quizLeft = 10
+    var quizScore = 0.0
+    var earnedPoints = 0.0
+
+    private var idMatch: Int = 404
+    private var lastMove: String? = null
+    private var isCheckmate: Boolean = false
+    private var bestMove: String = ""
+    private var stockMove: String = ""
+
+    private val _checkmateEvent = MutableStateFlow(false)
+    private val _quizEvent = MutableStateFlow(false)
+    val checkmateEvent: StateFlow<Boolean> = _checkmateEvent.asStateFlow()
+    val quizEvent: StateFlow<Boolean> = _quizEvent.asStateFlow()
 
     private val _uiState = MutableStateFlow(
         ChessGameUIState(
@@ -43,7 +69,6 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
         )
     )
     val uiState: StateFlow<ChessGameUIState> = _uiState.asStateFlow()
-
     private val _gameStarted = MutableStateFlow(false)
     val gameStarted: StateFlow<Boolean> = _gameStarted.asStateFlow()
 
@@ -57,12 +82,168 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
         }
     }
 
+    private fun nextPieceId(): Int = pieceId++
+
     fun startGame() {
         _gameStarted.value = true
+        idMatch = startMatchId()
+        isLocal = true
     }
 
     fun resetGame() {
         _gameStarted.value = false
+
+        board = Board()
+        selectedCell = null
+        pieceId = 0
+        promotionMoves = emptyList()
+        isCheckmate = false
+        lastMove = null
+        currentSideToMove = null
+        _checkmateEvent.value = false
+
+        resetStockFish(idMatch)
+        emitCurrentUI()
+    }
+
+    fun startQuiz() {
+        _gameStarted.value = true
+        _checkmateEvent.value = false
+        val quizData = getQuiz()
+        fenString = quizData.first
+        idMatch = quizData.second
+        board.loadFromFen(fenString)
+        isQuiz = true
+        isCheckmate = false
+        quizAttempts = 2
+        Log.i("Quiz", isQuiz.toString())
+        quizLeft--
+        emitCurrentUI()
+    }
+
+    private fun startMatchId() : Int {
+
+        val job = viewModelScope.launch(Dispatchers.IO) { run {
+            val name = "https://lralli.pythonanywhere.com" + "/startMatch"
+            val url = URL(name)
+            val conn = url.openConnection() as HttpsURLConnection
+            Log.i("CONN", "connection")
+            try {
+                conn.run{
+                    requestMethod = "GET"
+                    val r = JSONObject(InputStreamReader(inputStream).readText())
+                    idMatch = r.get("response") as Int
+                    Log.d("MATCH ID", idMatch.toString())
+                }
+            } catch (e: Exception) {
+                Log.e("MATCH ERROR", e.toString())
+            }
+        }
+        }
+        runBlocking {
+            job.join()
+        }
+        return idMatch
+    }
+
+    fun getQuiz(): Pair<String, Int> {
+        var fen = ""
+        var idQuiz = 404
+        val job = viewModelScope.launch(Dispatchers.IO) { run {
+            val name = "https://lralli.pythonanywhere.com" + "/quizStart"
+            val url = URL(name)
+            val conn = url.openConnection() as HttpsURLConnection
+            Log.i("CONN", "connection")
+            try {
+                conn.run{
+                    requestMethod = "GET"
+                    val r = JSONObject(InputStreamReader(inputStream).readText())
+                    idQuiz = r.get("IDMatch") as Int
+                    fen = r.get("response") as String
+                    Log.d("MATCH ID", idQuiz.toString())
+                }
+            } catch (e: Exception) {
+                Log.e("MATCH ERROR", e.toString())
+            }
+        }
+        }
+        runBlocking {
+            job.join()
+        }
+        return Pair(fen, idQuiz)
+    }
+
+    private fun resetStockFish(id: Int){
+
+        val job = viewModelScope.launch(Dispatchers.IO) {
+            run {
+                val name = "https://lralli.pythonanywhere.com/reset?index=$id"
+                val url = URL(name)
+                val conn = url.openConnection() as HttpsURLConnection
+                try {
+                    conn.run{
+                        requestMethod = "GET"
+                        val r = JSONObject(InputStreamReader(inputStream).readText())
+                        val resetErr= r.get("errore") as Boolean
+                        val resetID = r.get("reset_id") as Int
+                        Log.d("RESET", resetID.toString() + resetErr.toString())
+                    }
+                } catch (e: Exception) {
+                    Log.e("RESET ERROR", e.toString())
+                }
+            }
+        }
+        runBlocking {
+            job.join()
+        }
+    }
+
+    private fun checkMate(
+        move: String?,
+        prom: String,
+        id: Int
+    ): Boolean {
+
+        if(move != null){
+            val moveString = transformInput(move)
+            Log.i("MoveString", "$moveString")
+
+            val idString = id.toString()
+            val name = "https://lralli.pythonanywhere.com/" + "?move=" +
+                    "" + moveString + prom + "" + "&index=" + idString
+            Log.i("Name", "$name")
+            val url = URL(name)
+            val conn = url.openConnection() as HttpsURLConnection
+
+            val job = viewModelScope.launch(Dispatchers.IO){ run {
+                try {
+                    conn.run {
+                        requestMethod = "POST"
+                        val r = JSONObject(InputStreamReader(inputStream).readText())
+                        val mate = r.get("mate") as String
+                        isCheckmate = mate.toBoolean()
+                    }
+                } catch (e: Exception) {
+                    Log.e("Move error: ", e.toString())
+                }
+            }
+            }
+            runBlocking {
+                job.join()
+            }
+        }
+        return isCheckmate
+    }
+
+    private fun transformInput(input: String?): String? {
+        if(input!= null){
+            var dashIndex = input.indexOf('-')
+            if(input.length > 11) dashIndex += 8
+            val beforeDash = input.substring(dashIndex - 2, dashIndex).lowercase()
+            val afterDash = input.substring(dashIndex + 1, dashIndex + 3).lowercase()
+            return beforeDash + afterDash
+        }
+        return null
     }
 
     override fun onSquareClicked(square: Square) {
@@ -81,11 +262,164 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
 
             emitCurrentUI()
         }
+
+        bestMove = bestMoveQuiz(idMatch)
+        if(_quizEvent.value) {
+            _quizEvent.value = false
+        }
     }
 
     override fun onReleasePiece(square: Square) {
         doMoveIfCan(square)
         emitCurrentUI()
+
+        if(isLocal){
+            if(promotionMoves.isEmpty()) {
+                if (checkMate(lastMove, "", idMatch)) {
+                    currentSideToMove = board.sideToMove.toString()
+                    showCheckmateDialog()
+                }
+            }
+        }
+
+        if(isQuiz){
+            if(transformInput(lastMove) != bestMove){
+                Log.i("NOT BEST", "${transformInput(lastMove)} not equal to $bestMove")
+                showQuizDialog()
+                board.loadFromFen(fenString)
+                undoStockfish(idMatch, fenString)
+                quizAttempts -= 1
+                emitCurrentUI()
+            } else {
+                stockfishMove(lastMove, "", idMatch)
+
+                if(isCheckmate){
+                    if(quizAttempts == 2){
+                        earnedPoints = 1.0
+                        quizScore += earnedPoints
+                    } else {
+                        earnedPoints = 0.5
+                        quizScore += earnedPoints
+                    }
+                    currentSideToMove = board.sideToMove.toString()
+                    showCheckmateDialog()
+                    quizAttempts = 0
+                }
+                else{
+                    board.doMove(stockMove)
+                    emitCurrentUI()
+                }
+            }
+        }
+
+        Log.i("quizevent", "${quizEvent.value}")
+    }
+
+    fun stockfishMove(move: String?,
+                      prom: String,
+                      id: Int) {
+
+        if(move != null){
+            val moveString = transformInput(move)
+            Log.i("MoveString", "$moveString")
+
+            val idString = id.toString()
+            val name = "https://lralli.pythonanywhere.com/stockfish" + "?move=" +
+                    "" + moveString + prom + "" + "&index=" + idString
+            Log.i("Name", "$name")
+            val url = URL(name)
+            val conn = url.openConnection() as HttpsURLConnection
+
+            val job = viewModelScope.launch(Dispatchers.IO){ run {
+                try {
+                    conn.run {
+                        requestMethod = "POST"
+                        val r = JSONObject(InputStreamReader(inputStream).readText())
+                        val mate = r.get("mate") as String
+                        Log.i("matequiz", "$mate")
+                        if(mate == "player" || mate == "stockfish"){
+                            isCheckmate = true
+                        }
+                        else{
+                            stockMove = r.get("response") as String
+                            Log.i("STOCK MOVE", "$stockMove")
+                        }
+                        Log.i("ISCHECK", "$isCheckmate")
+                    }
+                } catch (e: Exception) {
+                    Log.e("Move error: ", e.toString())
+                }
+            }
+            }
+            runBlocking {
+                job.join()
+            }
+        }
+    }
+
+    fun bestMoveQuiz(id: Int
+    ): String {
+
+        val idString = id.toString()
+        val name = "https://lralli.pythonanywhere.com/bestMove" + "?index=" +
+                    idString
+        Log.i("Name", "$name")
+        val url = URL(name)
+        val conn = url.openConnection() as HttpsURLConnection
+
+        val job = viewModelScope.launch(Dispatchers.IO){ run {
+            try {
+                conn.run {
+                    requestMethod = "POST"
+                    val r = JSONObject(InputStreamReader(inputStream).readText())
+                    bestMove = r.get("best") as String
+                    Log.i("BestEngine","$bestMove")
+                }
+                } catch (e: Exception) {
+                    Log.e("Move error: ", e.toString())
+                }
+            }
+            }
+            runBlocking {
+                job.join()
+            }
+        return bestMove
+    }
+
+    fun undoStockfish(id: Int,
+                      fen: String){
+
+        val idString = id.toString()
+        val name = "https://lralli.pythonanywhere.com/undoStockfish" + "?fen=" +
+                    "" + fen + "" + "&index=" + idString
+        Log.i("Name", "$name")
+        val url = URL(name)
+        val conn = url.openConnection() as HttpsURLConnection
+
+        val job = viewModelScope.launch(Dispatchers.IO){ run {
+            try {
+                conn.run {
+                    requestMethod = "POST"
+                    val r = JSONObject(InputStreamReader(inputStream).readText())
+                    val status = r.get("response") as String
+                    Log.i("Status", "$status")
+                }
+            } catch (e: Exception) {
+                Log.e("Move error: ", e.toString())
+            }
+        }
+        }
+        runBlocking {
+            job.join()
+        }
+    }
+
+    fun showCheckmateDialog() {
+        _checkmateEvent.value = true
+    }
+
+    fun showQuizDialog() {
+        _quizEvent.value = true
     }
 
     private fun doMoveIfCan(square: Square) {
@@ -101,7 +435,7 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
         selectedCell = null
     }
 
-    override fun onPromotionPieceTypeSelected(pieceType: PieceType) {
+    override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {
         val promotionPiece = pieceType.toPiece()
         val move = promotionMoves.find { it.promotion == promotionPiece }
         requireNotNull(move)
@@ -109,6 +443,11 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
         promotionMoves = emptyList()
 
         emitCurrentUI()
+
+        if (checkMate(lastMove, promotionString, idMatch)) {
+            currentSideToMove = board.sideToMove.toString()
+            showCheckmateDialog()
+        }
     }
 
     private fun emitCurrentUI() {
@@ -129,6 +468,8 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
                         moves.getOrNull(1).toHistoryString()
                     }"
                 }
+
+            lastMove = currentHistory.lastOrNull()
 
             val promotions = promotionMoves
                 .mapNotNull { it.promotion.toPieceType() }
@@ -199,9 +540,6 @@ class ChessGameViewModel : ViewModel(), ChessBoardListener {
             }
         }
     }
-
-
-    private fun nextPieceId(): Int = pieceId++
 }
 
 private fun MoveBackup?.toHistoryString(): String {

@@ -2,9 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -13,7 +16,23 @@
         android:theme="@style/Theme.ChessMAC"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".Quiz"
+            android:exported="false"
+            android:label="@string/title_activity_quiz"
+            android:theme="@style/Theme.ChessMAC" />
+        <activity
+            android:name=".MainMenu"
+            android:exported="true"
+            android:label="@string/title_activity_main_menu"
+            android:theme="@style/Theme.ChessMAC">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".LocalGame"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.ChessMAC">

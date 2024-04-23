@@ -1,6 +1,5 @@
 package com.example.chessmac.ui.board
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -34,7 +33,7 @@ object DummyChessBoardListener : ChessBoardListener {
     override fun onSquareClicked(square: Square) {}
     override fun onTakePiece(square: Square) {}
     override fun onReleasePiece(square: Square) {}
-    override fun onPromotionPieceTypeSelected(pieceType: PieceType) {}
+    override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {}
 }
 
 @Composable
@@ -204,7 +203,7 @@ fun ChessBoardPreview() {
             override fun onSquareClicked(square: Square) {}
             override fun onTakePiece(square: Square) {}
             override fun onReleasePiece(square: Square) {}
-            override fun onPromotionPieceTypeSelected(pieceType: PieceType) {}
+            override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {}
         },
     )
 }
