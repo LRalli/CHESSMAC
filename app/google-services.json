@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "287424705417",
+    "project_id": "chessmacc-3aaab",
+    "storage_bucket": "chessmacc-3aaab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287424705417:android:cba2e0ac470fae1a1f6758",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXszVhREIWoBgISqTuj8hvuElfB649Irc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
