@@ -17,4 +17,10 @@
     <string name="moves_title">Moves:</string>
     <string name="title_activity_main_menu">MainMenu</string>
     <string name="title_activity_quiz">Quiz</string>
+    <string name="login">Login</string>
+    <string name="email">email</string>
+    <string name="password">password</string>
+    <string name="register">Register</string>
+    <string name="click_to_register">Click to register</string>
+
 </resources>

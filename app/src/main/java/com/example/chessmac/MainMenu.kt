@@ -27,6 +27,8 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 class MainMenu : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -58,6 +60,11 @@ fun Menu(activity: ComponentActivity) {
         }
         Button(onClick = { /* TODO: Navigate to ActivityA2 */ }) {
             Text("Stockfish Game")
+        }
+        Button(onClick = {
+            val intent = Intent(activity, Quiz::class.java)
+            activity.startActivity(intent) }) {
+            Text("Quiz")
         }
         Button(onClick = {
             val intent = Intent(activity, Quiz::class.java)
