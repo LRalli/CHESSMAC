@@ -85,92 +85,134 @@ fun ChessGameScreen(
         ) {
             val squareSize = ((LocalConfiguration.current.screenWidthDp - 16) / 8).dp
 
-            if(mode == "LOCAL"){
-                ChessBoard(
-                    chessBoard = game.board,
-                    pieces = game.pieces,
-                    selectedSquare = game.selectedSquare,
-                    squaresForMove = game.squaresForMove,
-                    promotions = game.promotions,
-                    squareSize = squareSize,
-                    listener = effectiveListener,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            viewModel.startGame()
-                        },
-                        enabled = !gameStarted,
+            when (mode) {
+                "LOCAL" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 4.dp)
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
                     ) {
-                        Text(text = "Start")
-                    }
-                    Button(
-                        onClick = {
-                            viewModel.resetGame()
-                        },
-                        enabled = gameStarted,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 4.dp)
-                    ) {
-                        Text(text = "Reset")
-                    }
-                }
-            }
-            else if(mode == "QUIZ"){
-                ChessBoard(
-                    chessBoard = game.board,
-                    pieces = game.pieces,
-                    selectedSquare = game.selectedSquare,
-                    squaresForMove = game.squaresForMove,
-                    promotions = game.promotions,
-                    squareSize = squareSize,
-                    listener = effectiveListener,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            viewModel.startQuiz()
-                        },
-                        enabled = !gameStarted,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 4.dp)
-                    ) {
-                        Text(text = "Start")
-                    }
-                    Button(
-                        onClick = {
-                            viewModel.startQuiz()
-                        },
-                        enabled = viewModel.quizAttempts == 0,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 4.dp)
-                    ) {
-                        Text(text = "Next quiz")
+                        Button(
+                            onClick = {
+                                viewModel.startGame()
+                            },
+                            enabled = !gameStarted,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp)
+                        ) {
+                            Text(text = "Start")
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.resetGame()
+                            },
+                            enabled = gameStarted,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 4.dp)
+                        ) {
+                            Text(text = "Reset")
+                        }
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(text = "Quiz Left: ${viewModel.quizLeft}")
-                    Text(text = "Quiz score: ${viewModel.quizScore}")
+                "QUIZ" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                viewModel.startQuiz()
+                            },
+                            enabled = !gameStarted,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp)
+                        ) {
+                            Text(text = "Start")
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.startQuiz()
+                            },
+                            enabled = viewModel.quizAttempts == 0,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 4.dp)
+                        ) {
+                            Text(text = "Next quiz")
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Text(text = "Quiz Left: ${viewModel.quizLeft}")
+                        Text(text = "Quiz score: ${viewModel.quizScore}")
+                    }
+                }
+                "STOCKGAME" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                viewModel.startStockGame()
+                            },
+                            enabled = !gameStarted,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp)
+                        ) {
+                            Text(text = "Start")
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.resetGame()
+                            },
+                            enabled = gameStarted,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 4.dp)
+                        ) {
+                            Text(text = "Reset")
+                        }
+                    }
                 }
             }
             GameHistory(

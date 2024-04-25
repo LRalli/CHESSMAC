@@ -2,7 +2,6 @@ package com.example.chessmac
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.chessmac.ui.theme.ChessMACTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.json.JSONObject
-import java.io.InputStreamReader
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 
 class MainMenu : ComponentActivity() {
 
@@ -33,7 +24,6 @@ class MainMenu : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ChessMACTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
@@ -58,13 +48,10 @@ fun Menu(activity: ComponentActivity) {
             activity.startActivity(intent) }) {
             Text("Local Game")
         }
-        Button(onClick = { /* TODO: Navigate to ActivityA2 */ }) {
-            Text("Stockfish Game")
-        }
         Button(onClick = {
-            val intent = Intent(activity, Quiz::class.java)
+            val intent = Intent(activity, StockGame::class.java)
             activity.startActivity(intent) }) {
-            Text("Quiz")
+            Text("Stockfish Game")
         }
         Button(onClick = {
             val intent = Intent(activity, Quiz::class.java)
