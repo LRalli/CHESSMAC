@@ -32,23 +32,26 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 class ChessGameViewModel: ViewModel(), ChessBoardListener {
+    // Mode
     private var isQuiz: Boolean = false
     private var isLocal: Boolean = false
     private var isStock: Boolean = false
 
     private val chessBoard = ChessBoard()
     private var board = Board()
+    private var idMatch: Int = 404
+    private var fenString = ""
+
     private var selectedCell: Square? = null
     private var pieceId = 0
     private var promotionMoves: List<Move> = emptyList()
     var currentSideToMove: String? = null
-    private var fenString = ""
+
     var quizAttempts = 2
     var quizLeft = 10
     var quizScore = 0.0
     var earnedPoints = 0.0
 
-    private var idMatch: Int = 404
     private var lastMove: String? = null
     private var isCheckmate: Boolean = false
     private var bestMove: String = ""
@@ -205,7 +208,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
-    //Check if move is check
+    //Check if move is mate
     private fun checkMate(
         move: String?,
         prom: String,
@@ -214,8 +217,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         if(move != null){
             val moveString = transformInput(move)
-            Log.i("MoveString", "$moveString")
-
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/" + "?move=" +
                     "" + moveString + prom + "" + "&index=" + idString
@@ -242,6 +243,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         return isCheckmate
     }
 
+    //♙e2-e4 -> e2e4
     private fun transformInput(input: String?): String? {
         if(input!= null){
             var dashIndex = input.indexOf('-')
@@ -260,7 +262,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         } else {
             doMoveIfCan(square)
         }
-
         emitCurrentUI()
     }
 
@@ -268,15 +269,14 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     override fun onTakePiece(square: Square) {
         if (board.getPiece(square).pieceSide == board.sideToMove) {
             selectedCell = square
-
             emitCurrentUI()
         }
-
-        bestMove = bestMoveQuiz(idMatch)
-        if(_quizEvent.value) {
-            _quizEvent.value = false
+        if (isQuiz) {
+            bestMove = bestMoveQuiz(idMatch)
+            if(_quizEvent.value) {
+                _quizEvent.value = false
+            }
         }
-
     }
 
     //Actions to perform on release of screen (piece)
@@ -325,20 +325,24 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         else if(isStock){
             stockfishMove(lastMove, "", idMatch)
-            Log.i("STOCKMOVE", stockMove)
-            board.doMove(stockMove)
-            emitCurrentUI()
+            if(isCheckmate){
+                currentSideToMove = board.sideToMove.toString()
+                showCheckmateDialog()
+            }
+            else {
+                board.doMove(stockMove)
+                emitCurrentUI()
+            }
         }
     }
 
+    //Trigger stockfish to perform its best move, then return it
     private fun stockfishMove(move: String?,
                               prom: String,
                               id: Int) {
 
         if(move != null){
             val moveString = transformInput(move)
-            Log.i("MoveString", "$moveString")
-
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/stockfish" + "?move=" +
                     "" + moveString + prom + "" + "&index=" + idString
@@ -370,6 +374,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
+    //Retrieve best move for quiz
     private fun bestMoveQuiz(id: Int
     ): String {
 
@@ -397,6 +402,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         return bestMove
     }
 
+    //Reset stockfish if quiz mistake
     private fun undoStockfish(id: Int,
                               fen: String){
 
@@ -421,14 +427,17 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
+    //Trigger checkmate dialogue box
     fun showCheckmateDialog() {
         _checkmateEvent.value = true
     }
 
+    //Trigger quiz dialogue box
     fun showQuizDialog() {
         _quizEvent.value = true
     }
 
+    //Perform standard move or setup promotion pane
     private fun doMoveIfCan(square: Square) {
         val possibleMoves = board.legalMoves().filter {
             it.from == selectedCell && it.to == square
@@ -438,10 +447,10 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         } else if (possibleMoves.size > 1) {
             promotionMoves = possibleMoves
         }
-
         selectedCell = null
     }
 
+    //Handles promotion actions
     override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {
         val promotionPiece = pieceType.toPiece()
         val move = promotionMoves.find { it.promotion == promotionPiece }
@@ -457,6 +466,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
+    //Update UI based on game state
     private fun emitCurrentUI() {
         _uiState.update { oldUiState ->
             val pieces = calculatePiecesOnSquares(oldUiState.pieces)
@@ -493,6 +503,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
+    //Update board based on game state
     private fun calculatePiecesOnSquares(pieces: List<PieceOnSquare>): List<PieceOnSquare> {
         if (pieces.isEmpty()) {
             return Square.values()
@@ -510,9 +521,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         val promotionFrom = promotionMoves.firstOrNull()?.from ?: Square.NONE
         val promotionTo = promotionMoves.firstOrNull()?.to ?: Square.NONE
 
-
         return buildList {
-
             Square.values()
                 .forEach { square ->
                     if (square != Square.NONE && square == promotionFrom) {
