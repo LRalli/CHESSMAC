@@ -115,6 +115,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     //Setup stockGame environment
     fun startStockGame(){
         _gameStarted.value = true
+        Log.i("IS_CHECK?", _checkmateEvent.value.toString())
         idMatch = startMatchId()
         isStock = true
     }
@@ -217,9 +218,11 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         if(move != null){
             val moveString = transformInput(move)
+            Log.i("MOVE_STRING", moveString.toString())
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/" + "?move=" +
                     "" + moveString + prom + "" + "&index=" + idString
+            Log.i("Test", name)
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
 
@@ -245,9 +248,13 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //♙e2-e4 -> e2e4
     private fun transformInput(input: String?): String? {
-        if(input!= null){
+        if (input != null) {
+            Log.i("INPUT", input.toString())
             var dashIndex = input.indexOf('-')
-            if(input.length > 11) dashIndex += 8
+            Log.i("DASH_INDEX", dashIndex.toString())
+            if (input.length > dashIndex + 10) {
+                dashIndex = input.indexOf('-', dashIndex + 1)
+            }
             val beforeDash = input.substring(dashIndex - 2, dashIndex).lowercase()
             val afterDash = input.substring(dashIndex + 1, dashIndex + 3).lowercase()
             return beforeDash + afterDash
@@ -287,6 +294,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         if(isLocal){
             if(promotionMoves.isEmpty()) {
                 if (checkMate(lastMove, "", idMatch)) {
+                    Log.i("OKKKK", "CHECKMATE_LOCAL")
                     currentSideToMove = board.sideToMove.toString()
                     showCheckmateDialog()
                 }
@@ -295,7 +303,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         else if(isQuiz){
             if(transformInput(lastMove) != bestMove){
-                Log.i("NOT BEST", "${transformInput(lastMove)} not equal to $bestMove")
                 showQuizDialog()
                 board.loadFromFen(fenString)
                 undoStockfish(idMatch, fenString)
@@ -326,12 +333,14 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         else if(isStock){
             stockfishMove(lastMove, "", idMatch)
             if(isCheckmate){
-                currentSideToMove = board.sideToMove.toString()
+                currentSideToMove = if (board.sideToMove.toString() == "BLACK") "WHITE" else "BLACK"
                 showCheckmateDialog()
             }
             else {
-                board.doMove(stockMove)
-                emitCurrentUI()
+                if (stockMove!="") {
+                    board.doMove(stockMove)
+                    emitCurrentUI()
+                }
             }
         }
     }
@@ -343,10 +352,12 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         if(move != null){
             val moveString = transformInput(move)
+            Log.i("MOVE", move.toString())
+            Log.i("MOVE_STRING", moveString.toString())
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/stockfish" + "?move=" +
                     "" + moveString + prom + "" + "&index=" + idString
-            Log.i("Name", name)
+            Log.i("NAME", name)
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
 
@@ -356,6 +367,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                         requestMethod = "POST"
                         val r = JSONObject(InputStreamReader(inputStream).readText())
                         val mate = r.get("mate") as String
+                        Log.i("MATE?", mate)
                         if(mate == "player" || mate == "stockfish"){
                             isCheckmate = true
                         }

@@ -293,7 +293,7 @@ fun ShowCheckmateDialog(
     val dialogState = remember { mutableStateOf(true) }
 
     if (dialogState.value) {
-        if(mode == "LOCAL"){
+        if(mode == "LOCAL" || mode == "STOCKGAME"){
             AlertDialog(
                 onDismissRequest = {
                     dialogState.value = false
