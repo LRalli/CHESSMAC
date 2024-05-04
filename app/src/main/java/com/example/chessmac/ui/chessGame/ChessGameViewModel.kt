@@ -18,7 +18,6 @@ import com.example.chessmac.ui.utils.isLongCastleMove
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,21 +45,27 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     private var pieceId = 0
     private var promotionMoves: List<Move> = emptyList()
     var currentSideToMove: String? = null
+    var bestMove: String = ""
 
     var quizAttempts = 2
     var quizLeft = 10
     var quizScore = 0.0
     var earnedPoints = 0.0
+    var hintCount = 3
 
     private var lastMove: String? = null
+    private var stockDifficulty: String? = null
     private var isCheckmate: Boolean = false
-    private var bestMove: String = ""
     private var stockMove: String = ""
 
     private val _checkmateEvent = MutableStateFlow(false)
     private val _quizEvent = MutableStateFlow(false)
+    private val _stockEvent = MutableStateFlow(false)
+    private val _hintEvent = MutableStateFlow(false)
     val checkmateEvent: StateFlow<Boolean> = _checkmateEvent.asStateFlow()
     val quizEvent: StateFlow<Boolean> = _quizEvent.asStateFlow()
+    val stockEvent: StateFlow<Boolean> = _stockEvent.asStateFlow()
+    val hintEvent: StateFlow<Boolean> = _hintEvent.asStateFlow()
 
     private val _uiState = MutableStateFlow(
         ChessGameUIState(
@@ -110,14 +115,16 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         quizAttempts = 2
         quizLeft--
         emitCurrentUI()
+
+        Log.i("START", _hintEvent.value.toString())
     }
 
     //Setup stockGame environment
     fun startStockGame(){
         _gameStarted.value = true
-        Log.i("IS_CHECK?", _checkmateEvent.value.toString())
         idMatch = startMatchId()
         isStock = true
+        showDifficultyDialog()
     }
 
     //Reset environment
@@ -135,6 +142,15 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         resetStockFish(idMatch)
         emitCurrentUI()
+    }
+
+    // Method to handle shake events
+    fun handleShake() {
+        if (hintCount > 0) {
+            bestMove = bestMoveQuiz(idMatch)
+            showHintDialog()
+            hintCount--
+        }
     }
 
     //Retrieve matchID from server
@@ -185,6 +201,32 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             job.join()
         }
         return Pair(fen, idQuiz)
+    }
+
+    fun setStockDifficulty(difficulty: String){
+        stockDifficulty = difficulty
+        var setElo = ""
+        val job = viewModelScope.launch(Dispatchers.IO) { run {
+            val name = "https://lralli.pythonanywhere.com" + "/info" + "?index=" + idMatch.toString() +
+                       "&ELO=" + difficulty
+            Log.i("URL test", name)
+            val url = URL(name)
+            val conn = url.openConnection() as HttpsURLConnection
+            try {
+                conn.run{
+                    requestMethod = "POST"
+                    val r = JSONObject(InputStreamReader(inputStream).readText())
+                    setElo = r.get("ELO") as String
+                }
+            } catch (e: Exception) {
+                Log.e("MATCH ERROR", e.toString())
+            }
+        }
+        }
+        runBlocking {
+            job.join()
+        }
+        Log.i("SET ELO:", setElo)
     }
 
     //Reset server's stockfish instance of id
@@ -279,9 +321,17 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             emitCurrentUI()
         }
         if (isQuiz) {
-            bestMove = bestMoveQuiz(idMatch)
+            if(bestMove == ""){
+                bestMove = bestMoveQuiz(idMatch)
+            }
             if(_quizEvent.value) {
                 _quizEvent.value = false
+            }
+        }
+
+        if (isStock) {
+            if (_stockEvent.value){
+                _stockEvent.value = false
             }
         }
     }
@@ -447,6 +497,16 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     //Trigger quiz dialogue box
     fun showQuizDialog() {
         _quizEvent.value = true
+    }
+
+    //Trigger stock engine difficulty dialogue box
+    fun showDifficultyDialog() {
+        _stockEvent.value = true
+    }
+
+    fun showHintDialog() {
+        _hintEvent.value = !_hintEvent.value
+        Log.i("TEST", _hintEvent.value.toString())
     }
 
     //Perform standard move or setup promotion pane

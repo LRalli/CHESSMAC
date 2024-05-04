@@ -1,6 +1,9 @@
 package com.example.chessmac.ui.chessGame
 
+import android.content.Context
 import android.content.res.Configuration
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,26 +23,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.DisposableEffect
+import com.example.chessmac.utils.ShakeDetector
 import com.example.chessmac.ui.board.ChessBoard
 import com.example.chessmac.ui.board.ChessBoardListener
 import com.example.chessmac.ui.GameHistory.GameHistory
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.chessmac.ui.board.DummyChessBoardListener
-import com.example.chessmac.ui.board.PieceOnSquare
-import kotlinx.collections.immutable.toImmutableList
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.chessmac.R
 
 @Composable
 fun ChessGameScreen(
     mode: String,
     chessGameViewModel: ChessGameViewModel = viewModel(),
+    context: Context
 ) {
     val game by chessGameViewModel.uiState.collectAsStateWithLifecycle()
     val gameStarted by chessGameViewModel.gameStarted.collectAsState()
 
     val checkmateEvent by chessGameViewModel.checkmateEvent.collectAsState()
     val quizEvent by chessGameViewModel.quizEvent.collectAsState()
-    val currentSideToMove = chessGameViewModel.currentSideToMove
+    val stockEvent by chessGameViewModel.stockEvent.collectAsState()
+    val hintEvent by chessGameViewModel.hintEvent.collectAsState()
 
+    val currentSideToMove = chessGameViewModel.currentSideToMove
+    val bestMove = chessGameViewModel.bestMove
+
+    //DisposableEffect is used to run provided functionality when composable is composed
+    //Needed for jetpack compose's lifecycle awareness
+    DisposableEffect(Unit) {
+        //Initialize ShakeDetector with handleShake() to be triggered when a shake is detected
+        val shakeDetector = ShakeDetector {
+            chessGameViewModel.handleShake()
+        }
+
+        //Initialize sensorManager to access device's sensors
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        // Register the ShakeDetector as a listener for sensor events
+        sensorManager.registerListener(
+            shakeDetector,
+            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), //Type of sensor
+            SensorManager.SENSOR_DELAY_NORMAL //Delay between sensor updates
+        )
+
+        //Cleanup logic
+        onDispose {
+            sensorManager.unregisterListener(shakeDetector)
+        }
+    }
 
     if (checkmateEvent) {
         chessGameViewModel.showCheckmateDialog() // Reset the state for future events
@@ -55,6 +89,23 @@ fun ChessGameScreen(
         chessGameViewModel.showQuizDialog() // Reset the state for future events
         ShowQuizDialog(onClose = { Log.d("ChessGameScreen", "Dialog dismissed") },
                         attempts = chessGameViewModel.quizAttempts)
+    }
+
+    if (stockEvent) {
+        chessGameViewModel.showDifficultyDialog()
+        ShowStockDifficultyDialog(
+            onDifficultySelected = { difficulty ->
+                chessGameViewModel.setStockDifficulty(difficulty)
+            },
+            onClose = {
+                Log.d("ChessGameScreen", "Stock difficulty dialog dismissed")
+            }
+        )
+    }
+
+    if (hintEvent) {
+        ShowHintDialog(onClose = { chessGameViewModel.showHintDialog() },
+            hint = bestMove)
     }
 
     ChessGameScreen(mode = mode,
@@ -137,6 +188,18 @@ fun ChessGameScreen(
                         listener = effectiveListener,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        repeat(viewModel.hintCount) {
+                            Image(
+                                painter = painterResource(id = R.drawable.lightbulb),
+                                contentDescription = "Hint"
+                            )
+                        }
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -334,6 +397,34 @@ fun ShowCheckmateDialog(
 }
 
 @Composable
+fun ShowHintDialog(
+    hint: String,
+    onClose: () -> Unit,
+) {
+    val dialogState = remember { mutableStateOf(true) }
+
+    if (dialogState.value) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogState.value = false
+                onClose()
+            },
+            title = { Text("Hint") },
+            text = { Text(hint) },
+            confirmButton = {
+                Button(onClick = {
+                    dialogState.value = false
+                    onClose()
+                }) {
+                    Text("OK")
+                }
+            },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
 fun ShowQuizDialog(onClose: () -> Unit, attempts: Int) {
     val dialogState = remember { mutableStateOf(true) }
 
@@ -353,6 +444,47 @@ fun ShowQuizDialog(onClose: () -> Unit, attempts: Int) {
                     Text("OK")
                 }
             },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+fun ShowStockDifficultyDialog(
+    onDifficultySelected: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    val dialogState = remember { mutableStateOf(true) }
+
+    if (dialogState.value) {
+        AlertDialog(
+            onDismissRequest = {
+                onClose() // Dismiss the dialog when the user dismisses it
+            },
+            title = { Text("Select Stock Engine Difficulty") },
+            text = {
+                Column {
+                    Button(onClick = {
+                        onDifficultySelected("600")
+                        dialogState.value = false // Dismiss the dialog after selection
+                    }) {
+                        Text("Easy")
+                    }
+                    Button(onClick = {
+                        onDifficultySelected("1300")
+                        dialogState.value = false // Dismiss the dialog after selection
+                    }) {
+                        Text("Medium")
+                    }
+                    Button(onClick = {
+                        onDifficultySelected("2000")
+                        dialogState.value = false // Dismiss the dialog after selection
+                    }) {
+                        Text("Hard")
+                    }
+                }
+            },
+            buttons = {}, // Empty list of buttons
             modifier = Modifier.padding(16.dp)
         )
     }

@@ -10,7 +10,7 @@ class LocalGame : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("LOCAL")
+            ChessGameScreen("LOCAL", context = applicationContext)
         }
     }
 

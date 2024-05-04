@@ -9,7 +9,7 @@ class Quiz : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("QUIZ")
+            ChessGameScreen("QUIZ", context = applicationContext)
         }
     }
 }

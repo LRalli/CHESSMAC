@@ -9,7 +9,7 @@ class StockGame : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("STOCKGAME")
+            ChessGameScreen("STOCKGAME", context = applicationContext)
         }
     }
 }
