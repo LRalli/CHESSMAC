@@ -3,16 +3,21 @@ package com.example.chessmac
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.chessmac.databinding.ActivityRegistrationBinding
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.database
 
 class Registration : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegistrationBinding
     private lateinit var firebaseAuth: FirebaseAuth
-
+    private lateinit var database : DatabaseReference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -26,15 +31,32 @@ class Registration : AppCompatActivity() {
             startActivity(intent)
         }
         binding.button.setOnClickListener {
+            val nickname = binding.nickEt.text.toString()
             val email = binding.emailEt.text.toString()
             val pass = binding.passET.text.toString()
             val confirmPass = binding.confirmPassEt.text.toString()
 
-            if (email.isNotEmpty() && pass.isNotEmpty() && confirmPass.isNotEmpty()) {
+            if (nickname.isNotEmpty() && email.isNotEmpty() && pass.isNotEmpty() && confirmPass.isNotEmpty()) {
                 if (pass == confirmPass) {
+
 
                     firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
                         if (it.isSuccessful) {
+                            database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersScore")
+                            val user = User(nickname,0.0)
+                            Log.d("UserCheck", "User object: $user")
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+                            if (uid != null) {
+                                database.child(uid).setValue(user).addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Log.d("Database", "User data set successfully")
+                                    } else {
+                                        Log.w("Database", "Error setting user data", task.exception)
+                                    }
+                                }
+                            } else {
+                                Log.w("Database", "No user logged in")
+                            }
                             val intent = Intent(this, Login::class.java)
                             startActivity(intent)
                         } else {

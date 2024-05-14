@@ -3,6 +3,7 @@ package com.example.chessmac.ui.chessGame
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chessmac.User
 import com.github.bhlangonijr.chesslib.Board
 import com.github.bhlangonijr.chesslib.MoveBackup
 import com.github.bhlangonijr.chesslib.Square
@@ -15,6 +16,9 @@ import com.example.chessmac.ui.board.ChessBoardListener
 import com.example.chessmac.ui.board.PieceOnSquare
 import com.example.chessmac.ui.utils.isShortCastleMove
 import com.example.chessmac.ui.utils.isLongCastleMove
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +56,8 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     var quizScore = 0.0
     var earnedPoints = 0.0
     var hintCount = 3
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    private lateinit var database : DatabaseReference
 
     private var lastMove: String? = null
     private var stockDifficulty: String? = null
@@ -358,6 +364,36 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 undoStockfish(idMatch, fenString)
                 quizAttempts -= 1
                 emitCurrentUI()
+                //modifica QUIZ
+                if(quizAttempts ==0 && quizLeft ==1){
+                    database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersScore")
+                    if (uid != null) {
+                        database.child(uid).get().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val snapshot = task.result
+                                if (snapshot.exists()) {
+                                    Log.d("Database", "User data read successfully")
+                                    val nickname = snapshot.child("nickname").getValue(String::class.java)
+                                    val user = User(nickname, quizScore)
+                                    database.child(uid).setValue(user).addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            Log.d("Database", "User data set successfully")
+                                        } else {
+                                            Log.w("Database", "Error setting user data", task.exception)
+                                        }
+                                    }
+                                    Log.d("Database", "Nickname: $nickname")
+                                } else {
+                                    Log.w("Database", "No data available at this node")
+                                }
+                            } else {
+                                Log.w("Database", "Error reading user data", task.exception)
+                            }
+                        }
+                    } else {
+                        Log.w("Database", "No user logged in")
+                    }
+                }
             } else {
                 stockfishMove(lastMove, "", idMatch)
 
@@ -368,6 +404,37 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                     } else {
                         earnedPoints = 0.5
                         quizScore += earnedPoints
+                    }
+                    //modifica QUIZ
+                    if(quizLeft==1){
+                        database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersScore")
+                        if (uid != null) {
+                            database.child(uid).get().addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val snapshot = task.result
+                                    if (snapshot.exists()) {
+                                        Log.d("Database", "User data read successfully")
+                                        val nickname = snapshot.child("nickname").getValue(String::class.java)
+                                        val user = User(nickname, quizScore)
+                                        database.child(uid).setValue(user).addOnCompleteListener { task ->
+                                            if (task.isSuccessful) {
+                                                Log.d("Database", "User data set successfully")
+                                            } else {
+                                                Log.w("Database", "Error setting user data", task.exception)
+                                            }
+                                        }
+                                        Log.d("Database", "Nickname: $nickname")
+                                    } else {
+                                        Log.w("Database", "No data available at this node")
+                                    }
+                                } else {
+                                    Log.w("Database", "Error reading user data", task.exception)
+                                }
+                            }
+                        } else {
+                            Log.w("Database", "No user logged in")
+                        }
+
                     }
                     currentSideToMove = board.sideToMove.toString()
                     showCheckmateDialog()

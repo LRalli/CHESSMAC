@@ -33,6 +33,11 @@
         </activity>
 
         <activity
+            android:name=".Leaderboard"
+            android:theme="@style/Theme.Material3.Light"
+            android:exported="true">
+        </activity>
+        <activity
             android:name=".Quiz"
             android:exported="true"
             android:label="@string/title_activity_quiz"

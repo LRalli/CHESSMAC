@@ -58,6 +58,11 @@ fun Menu(activity: ComponentActivity) {
             activity.startActivity(intent) }) {
             Text("Quiz")
         }
+        Button(onClick = {
+            val intent = Intent(activity, Leaderboard::class.java)
+            activity.startActivity(intent) }) {
+            Text("Leaderboard")
+        }
     }
 }
 

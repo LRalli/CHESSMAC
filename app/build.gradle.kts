@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation("com.google.firebase:firebase-database:21.0.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
