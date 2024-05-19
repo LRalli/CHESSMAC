@@ -47,6 +47,7 @@ fun Menu(activity: ComponentActivity) {
             val intent = Intent(activity, LocalGame::class.java)
             activity.startActivity(intent) }) {
             Text("Local Game")
+
         }
         Button(onClick = {
             val intent = Intent(activity, StockGame::class.java)
