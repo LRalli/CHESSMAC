@@ -21,7 +21,7 @@ class LeaderboardAdapter(private val userScores: List<User>) : RecyclerView.Adap
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val userScore = userScores[position]
         holder.nicknameTextView.text = userScore.nickname
-        holder.scoreTextView.text = userScore.quizscore.toString()
+        holder.scoreTextView.text = userScore.quizScore.toString()
     }
 
     override fun getItemCount() = userScores.size

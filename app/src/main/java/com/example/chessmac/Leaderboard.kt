@@ -28,7 +28,6 @@ class Leaderboard : ComponentActivity() {
         recyclerView = findViewById(R.id.recyclerViewLeaderboard)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Caricare i dati da Firebase
         loadLeaderboardData { userScores ->
             adapter = LeaderboardAdapter(userScores)
             recyclerView.adapter = adapter
@@ -46,12 +45,11 @@ class Leaderboard : ComponentActivity() {
                         leaderboardList.add(user)
                     }}
                 // Ordinare la lista per punteggio in modo decrescente
-                leaderboardList.sortByDescending { it.quizscore }
+                leaderboardList.sortByDescending { it.quizScore }
                 callback(leaderboardList)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
             }
 
         }
