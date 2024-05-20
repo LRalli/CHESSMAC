@@ -9,7 +9,7 @@ class StockGame : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("STOCKGAME", context = applicationContext)
+            ChessGameScreen("STOCKGAME", context = applicationContext, backgroundResId = R.drawable.perfect_green_grass)
         }
     }
 }

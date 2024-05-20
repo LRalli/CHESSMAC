@@ -1,4 +1,4 @@
-package com.example.chessmac
+package com.example.chessmac.auth
 
 
 import android.content.Intent
@@ -7,11 +7,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.chessmac.databinding.ActivityRegistrationBinding
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.database
 
 class Registration : AppCompatActivity() {
 
@@ -43,7 +41,7 @@ class Registration : AppCompatActivity() {
                     firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
                         if (it.isSuccessful) {
                             database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersScore")
-                            val user = User(nickname,0.0)
+                            val user = User(nickname)
                             Log.d("UserCheck", "User object: $user")
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
                             if (uid != null) {

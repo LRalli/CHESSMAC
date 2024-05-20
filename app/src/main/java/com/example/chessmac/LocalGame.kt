@@ -10,7 +10,7 @@ class LocalGame : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("LOCAL", context = applicationContext)
+            ChessGameScreen("LOCAL", context = applicationContext, backgroundResId = R.drawable.perfect_green_grass)
         }
     }
 

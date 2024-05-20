@@ -9,7 +9,7 @@ class Quiz : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChessGameScreen("QUIZ", context = applicationContext)
+            ChessGameScreen("QUIZ", context = applicationContext, backgroundResId = R.drawable.perfect_green_grass)
         }
     }
 }

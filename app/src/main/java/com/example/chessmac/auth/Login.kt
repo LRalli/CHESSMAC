@@ -1,10 +1,11 @@
-package com.example.chessmac
+package com.example.chessmac.auth
 
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.chessmac.MainMenu
 import com.example.chessmac.databinding.ActivityLoginBinding
 import com.google.firebase.auth.FirebaseAuth
 

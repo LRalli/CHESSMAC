@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Leaderboard">
+    android:background="@drawable/perfect_green_grass"
+    tools:context=".utils.Leaderboard">
 
     <TextView
         android:id="@+id/textViewTitle"
@@ -14,7 +15,8 @@
         android:layout_marginTop="16dp"
         android:text="Leaderboard"
         android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewLeaderboard"

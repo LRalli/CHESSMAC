@@ -1,6 +1,8 @@
 package com.example.chessmac.ui.chessGame
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.Sensor
 import android.hardware.SensorManager
@@ -31,14 +33,33 @@ import com.example.chessmac.ui.GameHistory.GameHistory
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.chessmac.ui.board.DummyChessBoardListener
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.example.chessmac.R
+import com.example.chessmac.utils.Leaderboard
+
+val customFontFamily = FontFamily(
+    Font(R.font.futura_medium_bt, FontWeight.Normal),
+)
 
 @Composable
 fun ChessGameScreen(
     mode: String,
     chessGameViewModel: ChessGameViewModel = viewModel(),
-    context: Context
+    context: Context,
+    backgroundResId: Int
 ) {
     val game by chessGameViewModel.uiState.collectAsStateWithLifecycle()
     val gameStarted by chessGameViewModel.gameStarted.collectAsState()
@@ -47,9 +68,11 @@ fun ChessGameScreen(
     val quizEvent by chessGameViewModel.quizEvent.collectAsState()
     val stockEvent by chessGameViewModel.stockEvent.collectAsState()
     val hintEvent by chessGameViewModel.hintEvent.collectAsState()
+    val quizFin by chessGameViewModel.quizFin.collectAsState()
 
     val currentSideToMove = chessGameViewModel.currentSideToMove
     val bestMove = chessGameViewModel.bestMove
+    val quizLeft = chessGameViewModel.quizLeft
 
     //DisposableEffect is used to run provided functionality when composable is composed
     //Needed for jetpack compose's lifecycle awareness
@@ -75,11 +98,25 @@ fun ChessGameScreen(
         }
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
+        val painter = painterResource(id = backgroundResId)
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
+    }
+
     if (checkmateEvent) {
         chessGameViewModel.showCheckmateDialog() // Reset the state for future events
         ShowCheckmateDialog(
             winner = if (currentSideToMove == "BLACK") "White" else "Black",
-            onClose = { Log.d("ChessGameScreen", "Dialog dismissed") },
+            onClose = {
+                      if(quizLeft == 0){
+                          chessGameViewModel.showQuizFinDialog()
+                      }
+            },
             mode = mode,
             points = chessGameViewModel.earnedPoints
         )
@@ -108,6 +145,10 @@ fun ChessGameScreen(
             hint = bestMove)
     }
 
+    if (quizFin) {
+        ShowFinDialog(){}
+    }
+
     ChessGameScreen(mode = mode,
                     game = game,
                     listener = chessGameViewModel,
@@ -123,6 +164,10 @@ fun ChessGameScreen(
     gameStarted: Boolean,
     viewModel: ChessGameViewModel
 ) {
+
+    val customButtonColors = ButtonDefaults.buttonColors(
+        backgroundColor = Color(0xFF3A5730) // Set the desired background color here
+    )
 
     val effectiveListener = remember(gameStarted) {
         if (gameStarted) listener else DummyChessBoardListener
@@ -151,7 +196,7 @@ fun ChessGameScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -160,9 +205,13 @@ fun ChessGameScreen(
                             enabled = !gameStarted,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(end = 4.dp)
+                                .padding(end = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Start")
+                            Text(
+                                text = "Start",
+                                color = Color.White,
+                            )
                         }
                         Button(
                             onClick = {
@@ -171,9 +220,13 @@ fun ChessGameScreen(
                             enabled = gameStarted,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 4.dp)
+                                .padding(start = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Reset")
+                            Text(
+                                text = "Reset",
+                                color = Color.White,
+                            )
                         }
                     }
                 }
@@ -191,19 +244,21 @@ fun ChessGameScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
                         repeat(viewModel.hintCount) {
                             Image(
-                                painter = painterResource(id = R.drawable.lightbulb),
-                                contentDescription = "Hint"
+                                painter = painterResource(id = R.drawable.interrogation_mark_1),
+                                contentDescription = "Hint",
+                                modifier = Modifier.size(30.dp)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -212,9 +267,13 @@ fun ChessGameScreen(
                             enabled = !gameStarted,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(end = 4.dp)
+                                .padding(end = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Start")
+                            Text(
+                                text = "Start",
+                                color = Color.White,
+                            )
                         }
                         Button(
                             onClick = {
@@ -223,18 +282,25 @@ fun ChessGameScreen(
                             enabled = viewModel.quizAttempts == 0,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 4.dp)
+                                .padding(start = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Next quiz")
+                            Text(
+                                text = "Next quiz",
+                                color = Color.White,
+                            )
                         }
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
-                        Text(text = "Quiz Left: ${viewModel.quizLeft}")
-                        Text(text = "Quiz score: ${viewModel.quizScore}")
+                        Text(text = "Quiz Left: ${viewModel.quizLeft}", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "-", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Quiz score: ${viewModel.quizScore}", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
                     }
                 }
                 "STOCKGAME" -> {
@@ -251,7 +317,7 @@ fun ChessGameScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -260,9 +326,13 @@ fun ChessGameScreen(
                             enabled = !gameStarted,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(end = 4.dp)
+                                .padding(end = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Start")
+                            Text(
+                                text = "Start",
+                                color = Color.White,
+                            )
                         }
                         Button(
                             onClick = {
@@ -271,9 +341,13 @@ fun ChessGameScreen(
                             enabled = gameStarted,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 4.dp)
+                                .padding(start = 4.dp),
+                            colors = customButtonColors
                         ) {
-                            Text(text = "Reset")
+                            Text(
+                                text = "Reset",
+                                color = Color.White,
+                            )
                         }
                     }
                 }
@@ -440,6 +514,35 @@ fun ShowQuizDialog(onClose: () -> Unit, attempts: Int) {
                 Button(onClick = {
                     dialogState.value = false
                     onClose()
+                }) {
+                    Text("OK")
+                }
+            },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+fun ShowFinDialog(onClose: () -> Unit) {
+    val dialogState = remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    if (dialogState.value) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogState.value = false
+                onClose()
+            },
+            title = { Text("Congratulations!") },
+            confirmButton = {
+                Button(onClick = {
+                    dialogState.value = false
+                    onClose()
+                    // Open Leaderboard app activity via Intent
+                    // Replace "YourLeaderboardActivity" with the actual activity name
+                    val intent = Intent(context, Leaderboard::class.java)
+                    context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }) {
                     Text("OK")
                 }
