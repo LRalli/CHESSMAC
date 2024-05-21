@@ -5,13 +5,12 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 
 class ShakeDetector(private val onShake: () -> Unit) : SensorEventListener {
-    private var lastUpdate: Long = 0  //Time of last sensor event
-    private var last_x = 0f           //Last known accelerometer readings
+    private var lastUpdate: Long = 0
+    private var last_x = 0f
     private var last_y = 0f
     private var last_z = 0f
     private val SHAKE_THRESHOLD = 800
 
-    //Called when a sensor event occurs
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             val current_time = System.currentTimeMillis()
@@ -25,8 +24,6 @@ class ShakeDetector(private val onShake: () -> Unit) : SensorEventListener {
 
                 val shake = Math.abs(x + y + z - last_x - last_y - last_z) / time_difference * 10000
 
-                //If it can be considered a shake, call the onShake method
-                //onShake is a function passed as parameter in ChessGameScreen
                 if (shake > SHAKE_THRESHOLD) {
                     onShake()
                 }
@@ -39,7 +36,6 @@ class ShakeDetector(private val onShake: () -> Unit) : SensorEventListener {
         }
     }
 
-    //Has to be here because of the SensorEventListener interface.
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // Do nothing
     }

@@ -28,7 +28,7 @@ class Leaderboard : ComponentActivity() {
         recyclerView = findViewById(R.id.recyclerViewLeaderboard)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Caricare i dati da Firebase
+        // Retrieve data from firebase
         loadLeaderboardData { userScores ->
             adapter = LeaderboardAdapter(userScores)
             recyclerView.adapter = adapter
@@ -54,7 +54,7 @@ class Leaderboard : ComponentActivity() {
                     val nickname = userSnapshot.child("nickname").getValue(String::class.java)
                     val profileImageUrl = userSnapshot.child("profileImageUrl").getValue(String::class.java) // Retrieve profile image URL
                     val scoresSnapshot = userSnapshot.child("scores")
-                    var highestScore = 0.0 // Initialize with 0
+                    var highestScore = 0.0 // Initialize with 0 to have it as an entry in the firebase
                     var scoreDate = ""
                     scoresSnapshot.children.forEach { scoreSnapshot ->
                         val score = scoreSnapshot.child("score").getValue(Double::class.java) ?: 0.0
@@ -65,18 +65,16 @@ class Leaderboard : ComponentActivity() {
                         }
                     }
                     if (highestScore != 0.0 && nickname != null) {
-                        val user = User(nickname, highestScore, scoreDate, profileImageUrl) // Populate User object with profile image URL
+                        val user = User(nickname, highestScore, scoreDate, profileImageUrl)
                         leaderboardList.add(user)
                     }
                 }
-                // Sort the leaderboard list by score in descending order
                 leaderboardList.sortByDescending { it.quizscore }
                 callback(leaderboardList)
             }
 
             override fun onCancelled(error: DatabaseError) {
                 Log.e("Leaderboard", "Error loading leaderboard data: ${error.message}")
-                // Handle error
             }
         }
         databaseReference.addListenerForSingleValueEvent(listener)

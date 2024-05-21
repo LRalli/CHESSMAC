@@ -3,7 +3,6 @@ package com.example.chessmac.ui.chessGame
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chessmac.auth.User
 import com.github.bhlangonijr.chesslib.Board
 import com.github.bhlangonijr.chesslib.MoveBackup
 import com.github.bhlangonijr.chesslib.Square
@@ -42,7 +41,6 @@ import java.util.Locale
 import javax.net.ssl.HttpsURLConnection
 
 class ChessGameViewModel: ViewModel(), ChessBoardListener {
-    // Mode
     private var isQuiz: Boolean = false
     private var isLocal: Boolean = false
     private var isStock: Boolean = false
@@ -63,8 +61,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     var quizScore = 0.0
     var earnedPoints = 0.0
     var hintCount = 3
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
-    private lateinit var database : DatabaseReference
 
     private var hintShown: Boolean = false
     private var lastMove: String? = null
@@ -102,8 +98,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             withContext(Dispatchers.Default) {
                 board.toString()
             }
-            Log.i("QUIZ LEFT", quizLeft.toString())
-            Log.i("FIN?", _quizFin.value.toString())
             emitCurrentUI()
         }
     }
@@ -132,8 +126,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         quizAttempts = 2
         quizLeft--
         emitCurrentUI()
-
-        Log.i("START", _hintEvent.value.toString())
     }
 
     //Setup stockGame environment
@@ -224,6 +216,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         return Pair(fen, idQuiz)
     }
 
+    // Set stock game difficulty
     fun setStockDifficulty(difficulty: String){
         stockDifficulty = difficulty
         var setElo = ""
@@ -247,7 +240,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         runBlocking {
             job.join()
         }
-        Log.i("SET ELO:", setElo)
     }
 
     //Reset server's stockfish instance of id
@@ -313,7 +305,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     private fun transformInput(input: String?): String? {
         if (input != null) {
 
-            // Handle castling separately
+            // Castling handling
             if (input.contains("0-0-0")) {
                 return "000"
             } else if (input.contains("0-0")) {
@@ -372,7 +364,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         if(isLocal){
             if(promotionMoves.isEmpty()) {
                 if (checkMate(lastMove, "", idMatch)) {
-                    Log.i("OKKKK", "CHECKMATE_LOCAL")
                     currentSideToMove = board.sideToMove.toString()
                     showCheckmateDialog()
                 }
@@ -381,15 +372,13 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         else if(isQuiz){
             if(transformInput(lastMove) != bestMove){
-                Log.i("BEST", bestMove)
                 lastMove?.let { Log.i("MINE", it) }
                 showQuizDialog()
                 board.loadFromFen(fenString)
                 undoStockfish(idMatch, fenString)
                 quizAttempts -= 1
                 emitCurrentUI()
-                //modifica QUIZ
-                if(quizAttempts ==0 && quizLeft ==1){
+                if(quizAttempts == 0 && quizLeft == 1){
                     storeQuizScore()
                 }
             } else {
@@ -439,6 +428,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
     }
 
+    // Store quiz score on firebase db
     private fun storeQuizScore() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         val database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersScore")
@@ -452,7 +442,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                         // If the nickname exists, proceed to store the quiz score
                         val userScoresRef = database.child(uid).child("scores")
                         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                        val newScoreId = userScoresRef.push().key // Generate a unique key for the new score
+                        val newScoreId = userScoresRef.push().key
 
                         newScoreId?.let { scoreId ->
                             val newScore = mapOf(
@@ -474,19 +464,19 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
                 }
             })
         } ?: Log.w("Database", "No user logged in")
     }
 
+    // Store stockfish record on firebase db
     private fun storeGameHistory(historyInfo: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         val database = FirebaseDatabase.getInstance("https://chessmacc-3aaab-default-rtdb.europe-west1.firebasedatabase.app").getReference("UsersHistory")
 
         uid?.let { userId ->
             val userHistoryRef = database.child(userId)
-            val historyId = userHistoryRef.push().key // Generate a unique key for the history entry
+            val historyId = userHistoryRef.push().key
 
             historyId?.let { id ->
                 userHistoryRef.child(id).setValue(historyInfo)
@@ -607,6 +597,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         _quizEvent.value = true
     }
 
+    //Trigger quiz win dialogue box
     fun showQuizFinDialog(){
         _quizFin.value = true
     }
@@ -616,9 +607,9 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         _stockEvent.value = true
     }
 
+    //Trigger quiz hint dialogue box
     fun showHintDialog() {
         _hintEvent.value = !_hintEvent.value
-        Log.i("TEST", _hintEvent.value.toString())
     }
 
     //Perform standard move or setup promotion pane

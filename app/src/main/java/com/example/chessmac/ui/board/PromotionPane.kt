@@ -46,8 +46,6 @@ fun PromotionPane(
 }
 
 private fun getPromotionString(pieceType: PieceType): String {
-    // Implement logic to convert PieceType to promotion string (e.g., "R" or "r")
-    // You might need to adjust this based on your PieceType implementation.
     return when (pieceType) {
         PieceType.QUEEN_DARK, PieceType.QUEEN_LIGHT -> "Q"
         PieceType.ROOK_DARK, PieceType.ROOK_LIGHT -> "R"
@@ -55,22 +53,4 @@ private fun getPromotionString(pieceType: PieceType): String {
         PieceType.KNIGHT_DARK, PieceType.KNIGHT_LIGHT -> "N"
         else -> throw IllegalArgumentException("Unsupported piece type: $pieceType")
     }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF0000FF)
-@Composable
-fun PromotionPanePreview() {
-    PromotionPane(
-        promotions = listOf(
-            PieceType.QUEEN_DARK,
-            PieceType.QUEEN_LIGHT,
-            PieceType.ROOK_DARK,
-            PieceType.KNIGHT_LIGHT
-        ).toImmutableList(),
-        cellSize = 78.dp,
-        listener = {_, _ ->},
-        modifier = Modifier
-            .background(Color.White)
-            .border(2.dp, color = Color.DarkGray)
-    )
 }

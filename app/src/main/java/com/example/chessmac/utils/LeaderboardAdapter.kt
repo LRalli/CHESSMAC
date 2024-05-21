@@ -38,18 +38,19 @@ class LeaderboardAdapter(private val userScores: List<User>) : RecyclerView.Adap
         holder.scoreTextView.text = userScore.quizscore.toString()
         holder.dateTextView.text = userScore.scoreDate
 
-        // Load profile image using Glide or Picasso
-        Glide.with(holder.itemView)
-            .load(userScore.profileImageUrl)
-            .placeholder(R.drawable.placeholder_image) // Placeholder image while loading
-            .error(R.drawable.error_image) // Placeholder image if there's an error loading
-            .circleCrop() // Crop the image into a circle
-            .into(holder.profileImageView)
+        if (!userScore.profileImageUrl.isNullOrEmpty()) {
+            Glide.with(holder.itemView)
+                .load(userScore.profileImageUrl)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.error_image)
+                .circleCrop()
+                .into(holder.profileImageView)
+        } else {
+            holder.profileImageView.setImageResource(R.drawable.default_usr)
+        }
 
-        // Set default position image
         holder.positionImageView.setImageResource(R.drawable.leaderboard_default)
 
-        // Set specific position image for top 3 positions
         if (position < topPositionDrawables.size) {
             holder.positionImageView.setImageResource(topPositionDrawables[position])
         }

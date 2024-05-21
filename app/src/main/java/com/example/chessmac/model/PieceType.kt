@@ -1,7 +1,5 @@
 package com.example.chessmac.model
 
-// Enum for the different types of chess pieces in our app
-
 enum class PieceType {
     KING_LIGHT,
     QUEEN_LIGHT,

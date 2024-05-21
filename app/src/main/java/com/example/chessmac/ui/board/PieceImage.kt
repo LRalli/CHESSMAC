@@ -57,18 +57,3 @@ private fun getPieceTypeDescriptionRes(pieceType: PieceType): Int =
         PieceType.KNIGHT_DARK -> R.string.knight_dark
         PieceType.PAWN_DARK -> R.string.pawn_dark
     }
-
-@Preview(showBackground = true, backgroundColor = 0xFF0000FF)
-@Composable
-fun PiecePieceImage() {
-    Row {
-        PieceImage(
-            pieceType = PieceType.BISHOP_DARK,
-            modifier = Modifier.size(48.dp)
-        )
-        PieceImage(
-            pieceType = PieceType.PAWN_LIGHT,
-            modifier = Modifier.size(48.dp)
-        )
-    }
-}

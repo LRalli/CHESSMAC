@@ -5,15 +5,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.chessmac.R
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -27,7 +24,6 @@ import java.util.UUID
 
 class UserProfile : AppCompatActivity() {
 
-    // Define your views and variables
     private lateinit var profileImage: ShapeableImageView
     private lateinit var databaseReference: DatabaseReference
     private lateinit var databaseReferenceHistory: DatabaseReference
@@ -36,11 +32,10 @@ class UserProfile : AppCompatActivity() {
     private lateinit var stockfishHistoryTextView: TextView
     private lateinit var logoutButton: Button
     private var currentUser: User? = null
-    private lateinit var storageReference: StorageReference // Initialize Storage Reference
+    private lateinit var storageReference: StorageReference
 
     private val imagePickLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            // Handle the returned Uri
             uri?.let {
                 try {
                     val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -73,13 +68,12 @@ class UserProfile : AppCompatActivity() {
                                     // Load the newly uploaded image and apply centerCrop transformation
                                     Glide.with(this@UserProfile)
                                         .load(imageUrl)
-                                        .placeholder(R.drawable.placeholder_image) // Placeholder image while loading
-                                        .error(R.drawable.error_image) // Error image if loading fails
-                                        .centerCrop() // This will make the image fill the entire ImageView
+                                        .placeholder(R.drawable.placeholder_image)
+                                        .error(R.drawable.error_image)
+                                        .centerCrop()
                                         .into(profileImage)
                                 }
                             }.addOnFailureListener { exception ->
-                                // Handle unsuccessful upload
                                 exception.printStackTrace()
                             }
                         }
@@ -94,19 +88,16 @@ class UserProfile : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        // Initialize views
         profileImage = findViewById(R.id.profile_image)
         usernameTextView = findViewById(R.id.tvNickname)
         quizScoresTextView = findViewById(R.id.tvQuizScores)
         stockfishHistoryTextView = findViewById(R.id.tvStockfishHistory)
         logoutButton = findViewById(R.id.btnLogout)
 
-        // Initialize Firebase Storage reference
         storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://chessmacc-3aaab.appspot.com")
 
         retrieveUserProfile()
 
-        // Set click listeners
         profileImage.setOnClickListener {
             imagePickLauncher.launch("image/*")
         }
@@ -130,13 +121,16 @@ class UserProfile : AppCompatActivity() {
                         usernameTextView.text = user.nickname
 
                         // Load profile image if available
-                        user.profileImageUrl?.let { imageUrl ->
+                        if (!user.profileImageUrl.isNullOrEmpty()) {
                             Glide.with(this@UserProfile)
-                                .load(imageUrl)
-                                .placeholder(R.drawable.placeholder_image) // Placeholder image while loading
-                                .error(R.drawable.error_image) // Error image if loading fails
-                                .centerCrop() // This will make the image fill the entire ImageView
+                                .load(user.profileImageUrl)
+                                .placeholder(R.drawable.default_usr)
+                                .error(R.drawable.error_image)
+                                .centerCrop()
                                 .into(profileImage)
+                        } else {
+                            // Set placeholder image if no profile image URL is found
+                            profileImage.setImageResource(R.drawable.default_usr)
                         }
 
                         // Fetch and format all quiz scores along with dates
@@ -171,7 +165,7 @@ class UserProfile : AppCompatActivity() {
                 .getReference("UsersHistory/$userId")
             databaseReferenceHistory.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val historyText = StringBuilder() // StringBuilder to build the combined history text
+                    val historyText = StringBuilder()
                     dataSnapshot.children.forEach { recordSnapshot ->
                         val record = recordSnapshot.getValue(String::class.java)
                         record?.let {
@@ -180,12 +174,10 @@ class UserProfile : AppCompatActivity() {
                             historyText.append("$date | $difficulty | $result\n")
                         }
                     }
-                    // Set the combined history text to the stockfishHistoryTextView
                     stockfishHistoryTextView.text = historyText.toString()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // Handle errors here
                     Log.e("UserProfile", "Failed to retrieve user profile: ${error.message}")
                 }
             })

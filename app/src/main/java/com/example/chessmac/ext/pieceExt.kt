@@ -3,8 +3,6 @@ package com.example.chessmac.ext
 import com.github.bhlangonijr.chesslib.Piece
 import com.example.chessmac.model.PieceType
 
-// Converts Piece (from chesslib) to PieceType (from our app)
-
 fun Piece.toPieceType(): PieceType? {
 
     return when (this) {

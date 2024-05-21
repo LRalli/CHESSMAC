@@ -1,6 +1,5 @@
 package com.example.chessmac.ui.chessGame
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -43,16 +42,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.chessmac.R
 import com.example.chessmac.utils.Leaderboard
-
-val customFontFamily = FontFamily(
-    Font(R.font.futura_medium_bt, FontWeight.Normal),
-)
 
 @Composable
 fun ChessGameScreen(
@@ -74,8 +66,6 @@ fun ChessGameScreen(
     val bestMove = chessGameViewModel.bestMove
     val quizLeft = chessGameViewModel.quizLeft
 
-    //DisposableEffect is used to run provided functionality when composable is composed
-    //Needed for jetpack compose's lifecycle awareness
     DisposableEffect(Unit) {
         //Initialize ShakeDetector with handleShake() to be triggered when a shake is detected
         val shakeDetector = ShakeDetector {
@@ -88,11 +78,10 @@ fun ChessGameScreen(
         // Register the ShakeDetector as a listener for sensor events
         sensorManager.registerListener(
             shakeDetector,
-            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), //Type of sensor
-            SensorManager.SENSOR_DELAY_NORMAL //Delay between sensor updates
+            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            SensorManager.SENSOR_DELAY_NORMAL
         )
 
-        //Cleanup logic
         onDispose {
             sensorManager.unregisterListener(shakeDetector)
         }
@@ -109,7 +98,7 @@ fun ChessGameScreen(
     }
 
     if (checkmateEvent) {
-        chessGameViewModel.showCheckmateDialog() // Reset the state for future events
+        chessGameViewModel.showCheckmateDialog()
         ShowCheckmateDialog(
             winner = if (currentSideToMove == "BLACK") "White" else "Black",
             onClose = {
@@ -123,7 +112,7 @@ fun ChessGameScreen(
     }
 
     if (quizEvent) {
-        chessGameViewModel.showQuizDialog() // Reset the state for future events
+        chessGameViewModel.showQuizDialog()
         ShowQuizDialog(onClose = { Log.d("ChessGameScreen", "Dialog dismissed") },
                         attempts = chessGameViewModel.quizAttempts)
     }
@@ -166,7 +155,7 @@ fun ChessGameScreen(
 ) {
 
     val customButtonColors = ButtonDefaults.buttonColors(
-        backgroundColor = Color(0xFF3A5730) // Set the desired background color here
+        backgroundColor = Color(0xFF3A5730)
     )
 
     val effectiveListener = remember(gameStarted) {
@@ -562,14 +551,12 @@ fun ShowFinDialog(onClose: () -> Unit) {
                 dialogState.value = false
                 onClose()
             },
-            title = { Text("Congratulations!",
+            title = { Text("Congratulations, you won!",
                     style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             confirmButton = {
                 Button(onClick = {
                     dialogState.value = false
                     onClose()
-                    // Open Leaderboard app activity via Intent
-                    // Replace "YourLeaderboardActivity" with the actual activity name
                     val intent = Intent(context, Leaderboard::class.java)
                     context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 },
@@ -596,7 +583,7 @@ fun ShowStockDifficultyDialog(
     if (dialogState.value) {
         AlertDialog(
             onDismissRequest = {
-                onClose() // Dismiss the dialog when the user dismisses it
+                onClose()
             },
             title = { Text("Select Stock Engine Difficulty",
                       style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
@@ -612,7 +599,7 @@ fun ShowStockDifficultyDialog(
                     Button(
                         onClick = {
                             onDifficultySelected("600")
-                            dialogState.value = false // Dismiss the dialog after selection
+                            dialogState.value = false
                         },
                         modifier = buttonModifier,
                         colors = buttonColors
@@ -625,7 +612,7 @@ fun ShowStockDifficultyDialog(
                     Button(
                         onClick = {
                             onDifficultySelected("1300")
-                            dialogState.value = false // Dismiss the dialog after selection
+                            dialogState.value = false
                         },
                         modifier = buttonModifier,
                         colors = buttonColors
@@ -638,7 +625,7 @@ fun ShowStockDifficultyDialog(
                     Button(
                         onClick = {
                             onDifficultySelected("2000")
-                            dialogState.value = false // Dismiss the dialog after selection
+                            dialogState.value = false
                         },
                         modifier = buttonModifier,
                         colors = buttonColors
@@ -654,10 +641,4 @@ fun ShowStockDifficultyDialog(
             modifier = Modifier.padding(16.dp)
         )
     }
-}
-
-
-@Composable
-fun DebugChessBoard(listener: ChessBoardListener) {
-    Log.i("DebugChessBoard", "Recomposed with listener: $listener")
 }

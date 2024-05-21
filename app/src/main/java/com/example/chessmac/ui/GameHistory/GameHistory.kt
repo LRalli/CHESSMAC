@@ -48,7 +48,6 @@ fun GameHistory(
         }
     }
 
-    //Scroll to the end of the history when it changes
     LaunchedEffect(history) {
         if (history.isNotEmpty()) {
             listState.scrollToItem(history.lastIndex)
@@ -75,18 +74,4 @@ fun GameHistoryItem(
             }
         }
     }
-}
-
-@Preview(widthDp = 320, showBackground = true)
-@Composable
-fun GameHistoryPreview() {
-    GameHistory(
-        persistentListOf(
-            "1. ♙ e2-e4 ♟ e7-e5",
-            "2. ♘ g1-f3 ♞ g8-f6",
-            "3. ♗ f1-c4"
-        ),
-        modifier = Modifier
-            .padding(top = 20.dp, start = 16.dp, end = 16.dp)
-    )
 }

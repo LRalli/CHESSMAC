@@ -48,13 +48,11 @@ fun ChessBoard(
     modifier: Modifier = Modifier
 ) {
 
-    // Ensures that rememberedListener is updated when listener changes
     val rememberedListener by rememberUpdatedState(listener)
 
     val squareSizePx = with(LocalDensity.current) {
         squareSize.toPx()
     }
-//The remember function is used to remember the state across recompositions in Jetpack Compose.
     var dragOverSquare by remember { mutableStateOf(Square.NONE) }
     val dragPieceOverSquareListener: (Square) -> Unit = { dragOverSquare = it }
 
@@ -177,33 +175,5 @@ private fun DrawScope.drawDragOverSquare(
             y = row * squareSizePx + squareSizePx / 2
         ),
         radius = (squareSizePx) / 1.4f
-    )
-}
-
-//The @Preview annotation indicates that this composable function is intended for previewing in the design tool of Android Studio.
-@Preview(showBackground = true, backgroundColor = 0xFF0000FF)
-@Composable
-fun ChessBoardPreview() {
-    ChessBoard(
-        chessBoard = ChessBoard(),
-        pieces = persistentListOf(
-            PieceOnSquare(0, PieceType.PAWN_LIGHT, Square.A2),
-            PieceOnSquare(1, PieceType.PAWN_DARK, Square.A7),
-            PieceOnSquare(2, PieceType.ROOK_DARK, Square.A8),
-            PieceOnSquare(3, PieceType.ROOK_LIGHT, Square.A1),
-            PieceOnSquare(4, PieceType.KNIGHT_LIGHT, Square.G1),
-        ),
-        selectedSquare = Square.C2,
-        squaresForMove = persistentSetOf(Square.A1, Square.A3, Square.B4, Square.D4, Square.E2),
-        promotions = emptyList<PieceType>().toImmutableList(),
-        squareSize = 48.dp,
-        //The listener object provides empty implementations for the ChessBoardListener interface methods.
-        // This is sufficient for preview purposes as actual interaction logic is not needed for a static UI preview.
-        listener = object : ChessBoardListener {
-            override fun onSquareClicked(square: Square) {}
-            override fun onTakePiece(square: Square) {}
-            override fun onReleasePiece(square: Square) {}
-            override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {}
-        },
     )
 }

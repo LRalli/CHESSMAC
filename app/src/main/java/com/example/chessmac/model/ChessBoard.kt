@@ -4,8 +4,6 @@ import com.github.bhlangonijr.chesslib.Square
 
 private const val BOARD_SIZE = 8
 
-// Represents chessboard + methods to access squares and retrieve their positions
-
 class ChessBoard {
     val size: Int
         get() = BOARD_SIZE

@@ -41,8 +41,6 @@ fun Piece (
     modifier: Modifier = Modifier,
 ) {
 
-    // Ensures that rememberedListener is updated when listener changes
-    // whenever a recomposition is triggered
     val rememberedListener by rememberUpdatedState(listener)
 
     val squareSizePx = with(LocalDensity.current) {
