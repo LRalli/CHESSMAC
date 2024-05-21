@@ -312,6 +312,14 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     //♙e2-e4 -> e2e4
     private fun transformInput(input: String?): String? {
         if (input != null) {
+
+            // Handle castling separately
+            if (input.contains("0-0-0")) {
+                return "000"
+            } else if (input.contains("0-0")) {
+                return "00"
+            }
+
             Log.i("INPUT", input.toString())
             var dashIndex = input.indexOf('-')
             Log.i("DASH_INDEX", dashIndex.toString())
