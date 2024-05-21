@@ -429,6 +429,8 @@ fun ShowCheckmateDialog(
 ) {
     val dialogState = remember { mutableStateOf(true) }
 
+    val buttonColors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3A5730))
+
     if (dialogState.value) {
         if(mode == "LOCAL" || mode == "STOCKGAME"){
             AlertDialog(
@@ -436,14 +438,19 @@ fun ShowCheckmateDialog(
                     dialogState.value = false
                     onClose()
                 },
-                title = { Text("Game Over") },
-                text = { Text("$winner won!") },
+                title = { Text("Game Over",
+                    style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
+                text = { Text("$winner won!",
+                    style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
                 confirmButton = {
                     Button(onClick = {
                         dialogState.value = false
                         onClose()
-                    }) {
-                        Text("OK")
+                    },
+                        colors = buttonColors) {
+                        Text("OK",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
                     }
                 },
                 modifier = Modifier.padding(16.dp)
@@ -454,14 +461,19 @@ fun ShowCheckmateDialog(
                     dialogState.value = false
                     onClose()
                 },
-                title = { Text("Quiz solved") },
-                text = { Text("You earned ${points} points") },
+                title = { Text("Quiz solved",
+                    style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
+                text = { Text("You earned $points points",
+                    style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
                 confirmButton = {
                     Button(onClick = {
                         dialogState.value = false
                         onClose()
-                    }) {
-                        Text("OK")
+                    },
+                        colors = buttonColors) {
+                        Text("OK",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
                     }
                 },
                 modifier = Modifier.padding(16.dp)
@@ -477,20 +489,27 @@ fun ShowHintDialog(
 ) {
     val dialogState = remember { mutableStateOf(true) }
 
+    val buttonColors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3A5730))
+
     if (dialogState.value) {
         AlertDialog(
             onDismissRequest = {
                 dialogState.value = false
                 onClose()
             },
-            title = { Text("Hint") },
-            text = { Text(hint) },
+            title = { Text("Hint",
+                style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
+            text = { Text(hint,
+                style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             confirmButton = {
                 Button(onClick = {
                     dialogState.value = false
                     onClose()
-                }) {
-                    Text("OK")
+                },
+                    colors = buttonColors) {
+                    Text("OK",
+                        color = Color.White,
+                        style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
                 }
             },
             modifier = Modifier.padding(16.dp)
@@ -502,20 +521,27 @@ fun ShowHintDialog(
 fun ShowQuizDialog(onClose: () -> Unit, attempts: Int) {
     val dialogState = remember { mutableStateOf(true) }
 
+    val buttonColors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3A5730))
+
     if (dialogState.value) {
         AlertDialog(
             onDismissRequest = {
                 dialogState.value = false
                 onClose()
             },
-            title = { Text("Bad move") },
-            text = { Text("$attempts tentatives left!") },
+            title = { Text("Bad move",
+                style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
+            text = { Text("$attempts tentatives left!", style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             confirmButton = {
                 Button(onClick = {
                     dialogState.value = false
                     onClose()
-                }) {
-                    Text("OK")
+                },
+                    colors = buttonColors
+                ) {
+                    Text("OK",
+                        color = Color.White,
+                        style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
                 }
             },
             modifier = Modifier.padding(16.dp)
@@ -528,13 +554,16 @@ fun ShowFinDialog(onClose: () -> Unit) {
     val dialogState = remember { mutableStateOf(true) }
     val context = LocalContext.current
 
+    val buttonColors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3A5730))
+
     if (dialogState.value) {
         AlertDialog(
             onDismissRequest = {
                 dialogState.value = false
                 onClose()
             },
-            title = { Text("Congratulations!") },
+            title = { Text("Congratulations!",
+                    style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             confirmButton = {
                 Button(onClick = {
                     dialogState.value = false
@@ -543,8 +572,11 @@ fun ShowFinDialog(onClose: () -> Unit) {
                     // Replace "YourLeaderboardActivity" with the actual activity name
                     val intent = Intent(context, Leaderboard::class.java)
                     context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                }) {
-                    Text("OK")
+                },
+                    colors = buttonColors) {
+                    Text("OK",
+                        color = Color.White,
+                        style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
                 }
             },
             modifier = Modifier.padding(16.dp)
@@ -559,31 +591,62 @@ fun ShowStockDifficultyDialog(
 ) {
     val dialogState = remember { mutableStateOf(true) }
 
+    val buttonColors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3A5730))
+
     if (dialogState.value) {
         AlertDialog(
             onDismissRequest = {
                 onClose() // Dismiss the dialog when the user dismisses it
             },
-            title = { Text("Select Stock Engine Difficulty") },
+            title = { Text("Select Stock Engine Difficulty",
+                      style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             text = {
-                Column {
-                    Button(onClick = {
-                        onDifficultySelected("600")
-                        dialogState.value = false // Dismiss the dialog after selection
-                    }) {
-                        Text("Easy")
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val buttonModifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 1.dp)
+
+                    Button(
+                        onClick = {
+                            onDifficultySelected("600")
+                            dialogState.value = false // Dismiss the dialog after selection
+                        },
+                        modifier = buttonModifier,
+                        colors = buttonColors
+                    ) {
+                        Text("Easy",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily)
+                        )
                     }
-                    Button(onClick = {
-                        onDifficultySelected("1300")
-                        dialogState.value = false // Dismiss the dialog after selection
-                    }) {
-                        Text("Medium")
+                    Button(
+                        onClick = {
+                            onDifficultySelected("1300")
+                            dialogState.value = false // Dismiss the dialog after selection
+                        },
+                        modifier = buttonModifier,
+                        colors = buttonColors
+                    ) {
+                        Text("Medium",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily)
+                        )
                     }
-                    Button(onClick = {
-                        onDifficultySelected("2000")
-                        dialogState.value = false // Dismiss the dialog after selection
-                    }) {
-                        Text("Hard")
+                    Button(
+                        onClick = {
+                            onDifficultySelected("2000")
+                            dialogState.value = false // Dismiss the dialog after selection
+                        },
+                        modifier = buttonModifier,
+                        colors = buttonColors
+                    ) {
+                        Text("Hard",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily)
+                        )
                     }
                 }
             },
