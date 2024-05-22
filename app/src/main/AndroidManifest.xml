@@ -18,6 +18,7 @@
         <activity
             android:name=".auth.Registration"
             android:theme="@style/Theme.Material3.Light.Green"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,17 +28,20 @@
 
         <activity
             android:name=".auth.Login"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Material3.Light.Green"
             android:exported="true">
         </activity>
 
         <activity
             android:name=".utils.Leaderboard"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.ChessMAC"
             android:exported="true">
         </activity>
         <activity
             android:name=".auth.UserProfile"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.ChessMAC"
             android:exported="true">
         </activity>
@@ -51,6 +55,7 @@
         <activity
             android:name=".MainMenu"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_main_menu"
             android:theme="@style/Theme.ChessMAC">
         </activity>

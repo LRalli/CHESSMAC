@@ -156,8 +156,8 @@ fun ChessGameScreen(
         backgroundColor = Color(0xFF3A5730)
     )
 
-    val effectiveListener = remember(gameStarted) {
-        if (gameStarted) listener else DummyChessBoardListener
+    val effectiveListener = remember(gameStarted, viewModel.quizAttempts) {
+        if (!gameStarted || viewModel.quizAttempts == 0) DummyChessBoardListener else listener
     }
 
     if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -217,6 +217,7 @@ fun ChessGameScreen(
                         }
                     }
                 }
+
                 "QUIZ" -> {
                     ChessBoard(
                         chessBoard = game.board,
@@ -283,13 +284,32 @@ fun ChessGameScreen(
                             .fillMaxWidth()
                             .padding(start = 10.dp, end = 10.dp, top = 8.dp)
                     ) {
-                        Text(text = "Quiz Left: ${viewModel.quizLeft}", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
+                        Text(
+                            text = "Quiz Left: ${viewModel.quizLeft}",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = com.example.chessmac.customFontFamily
+                            )
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "-", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
+                        Text(
+                            text = "-",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = com.example.chessmac.customFontFamily
+                            )
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Quiz score: ${viewModel.quizScore}", style = TextStyle(fontSize = 20.sp, fontFamily = com.example.chessmac.customFontFamily))
+                        Text(
+                            text = "Quiz score: ${viewModel.quizScore}",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = com.example.chessmac.customFontFamily
+                            )
+                        )
                     }
                 }
+
                 "STOCKGAME" -> {
                     ChessBoard(
                         chessBoard = game.board,
@@ -353,59 +373,219 @@ fun ChessGameScreen(
                 .fillMaxSize()
                 .padding(start = 8.dp)
         ) {
-            ChessBoard(
-                chessBoard = game.board,
-                pieces = game.pieces,
-                selectedSquare = game.selectedSquare,
-                squaresForMove = game.squaresForMove,
-                promotions = game.promotions,
-                squareSize = squareSize,
-                listener = effectiveListener,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
+            when (mode) {
+                "LOCAL" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = {
-                            viewModel.startGame()
-                        },
-                        enabled = !gameStarted,
+                    Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 4.dp)
+                            .padding(8.dp)
                     ) {
-                        Text(text = "Start")
-                    }
-                    Button(
-                        onClick = {
-                            viewModel.resetGame()
-                        },
-                        enabled = gameStarted,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 4.dp)
-                    ) {
-                        Text(text = "Reset")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = {
+                                    viewModel.startGame()
+                                },
+                                enabled = !gameStarted,
+                                colors = customButtonColors,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 4.dp)
+                            ) {
+                                Text(text = "Start", color = Color.White)
+                            }
+                            Button(
+                                onClick = {
+                                    viewModel.resetGame()
+                                },
+                                enabled = gameStarted,
+                                colors = customButtonColors,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 4.dp)
+                            ) {
+                                Text(text = "Reset", color = Color.White)
+                            }
+                        }
+
+                        GameHistory(
+                            history = game.history,
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                        )
                     }
                 }
 
-                GameHistory(
-                    history = game.history,
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                )
+                "QUIZ" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    viewModel.startQuiz()
+                                },
+                                enabled = !gameStarted,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 4.dp),
+                                colors = customButtonColors
+                            ) {
+                                Text(
+                                    text = "Start",
+                                    color = Color.White,
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    viewModel.startQuiz()
+                                },
+                                enabled = viewModel.quizAttempts == 0,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 4.dp),
+                                colors = customButtonColors
+                            ) {
+                                Text(
+                                    text = "Next quiz",
+                                    color = Color.White,
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            repeat(viewModel.hintCount) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.interrogation_mark_1),
+                                    contentDescription = "Hint",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text(
+                                text = "Quiz Left: ${viewModel.quizLeft}",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontFamily = com.example.chessmac.customFontFamily
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "-",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontFamily = com.example.chessmac.customFontFamily
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Quiz score: ${viewModel.quizScore}",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontFamily = com.example.chessmac.customFontFamily
+                                )
+                            )
+                        }
+                    }
+                }
+
+                "STOCKGAME" -> {
+                    ChessBoard(
+                        chessBoard = game.board,
+                        pieces = game.pieces,
+                        selectedSquare = game.selectedSquare,
+                        squaresForMove = game.squaresForMove,
+                        promotions = game.promotions,
+                        squareSize = squareSize,
+                        listener = effectiveListener,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = {
+                                    viewModel.startStockGame()
+                                },
+                                enabled = !gameStarted,
+                                colors = customButtonColors,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 4.dp)
+                            ) {
+                                Text(text = "Start", color = Color.White)
+                            }
+                            Button(
+                                onClick = {
+                                    viewModel.resetGame()
+                                },
+                                enabled = gameStarted,
+                                colors = customButtonColors,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 4.dp)
+                            ) {
+                                Text(text = "Reset", color = Color.White)
+                            }
+                        }
+
+                        GameHistory(
+                            history = game.history,
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                        )
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun ShowCheckmateDialog(
@@ -549,7 +729,7 @@ fun ShowFinDialog(onClose: () -> Unit) {
                 dialogState.value = false
                 onClose()
             },
-            title = { Text("Congratulations, you won!",
+            title = { Text("Congratulations, you reached the finishing line!",
                     style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily)) },
             confirmButton = {
                 Button(onClick = {

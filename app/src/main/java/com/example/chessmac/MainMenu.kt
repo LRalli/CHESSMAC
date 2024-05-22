@@ -3,6 +3,7 @@ package com.example.chessmac
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
@@ -66,8 +67,15 @@ class MainMenu : ComponentActivity() {
                 }
             }
         }
+        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                //DO NOTHING
+            }
+        })
     }
 }
+
+
 
 @Composable
 fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
@@ -150,7 +158,7 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                     Image(
                         painter = painterResource(id = R.drawable.robot),
                         contentDescription = "StockFish",
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(35.dp)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
@@ -176,7 +184,7 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                     Image(
                         painter = painterResource(id = R.drawable.puzzle),
                         contentDescription = "Quiz",
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.weight(2f))
                     Text(

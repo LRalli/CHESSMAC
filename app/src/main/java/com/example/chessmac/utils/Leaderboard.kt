@@ -36,7 +36,6 @@ class Leaderboard : ComponentActivity() {
 
         onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                Log.i("YES I'M HERE", "gg")
                 val intent = Intent(this@Leaderboard, MainMenu::class.java)
                 startActivity(intent)
                 finish()

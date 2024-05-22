@@ -157,14 +157,16 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     // Method to handle shake events
     fun handleShake() {
-        if (!hintShown && hintCount > 0) {
-            Log.i("SHAKE", hintCount.toString())
-            bestMove = bestMoveQuiz(idMatch)
-            Log.i("BEST_MOVE", bestMove)
-            showHintDialog()
-            hintCount--
-            emitCurrentUI()
-            hintShown = true
+        if (isQuiz){
+            if (!hintShown && hintCount > 0) {
+                Log.i("SHAKE", hintCount.toString())
+                bestMove = bestMoveQuiz(idMatch)
+                Log.i("BEST_MOVE", bestMove)
+                showHintDialog()
+                hintCount--
+                emitCurrentUI()
+                hintShown = true
+            }
         }
     }
 
@@ -361,6 +363,14 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //Actions to perform on release of screen (piece)
     override fun onReleasePiece(square: Square) {
+        if (selectedCell != null && selectedCell == square) {
+            // If the last action was just picking up the piece and dropping it back,
+            // then don't check for move correctness
+            selectedCell = null
+            emitCurrentUI()
+            return
+        }
+
         doMoveIfCan(square)
         emitCurrentUI()
 
@@ -374,9 +384,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             }
         }
 
-        else if(isQuiz){
-            Log.i("LAST MOVE: ", lastMove.toString())
-            Log.i("BEST MOVE: ", bestMove)
+        else if(isQuiz && quizAttempts != 0){
             if(transformInput(lastMove) != bestMove){
                 lastMove?.let { Log.i("MINE", it) }
                 showQuizDialog()
@@ -389,7 +397,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 }
             } else {
                 stockfishMove(lastMove, "", idMatch)
-                Log.i("QUIZ STOCK MOVE: ", stockMove)
                 if(isCheckmate){
                     if(quizAttempts == 2){
                         earnedPoints = 1.0
@@ -416,8 +423,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         else if(isStock){
             stockfishMove(lastMove, "", idMatch)
-            Log.i("LAST MOVE: ", lastMove.toString())
-            Log.i("STOCK MOVE: ", stockMove)
             if(isCheckmate){
                 val winnerSide = if (board.sideToMove.toString() == "WHITE") "W" else "L"
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
