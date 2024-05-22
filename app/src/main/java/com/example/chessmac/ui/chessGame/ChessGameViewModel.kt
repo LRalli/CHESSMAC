@@ -122,6 +122,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         board.loadFromFen(fenString)
 
         isQuiz = true
+        Log.i("STARTED QUIZ", isQuiz.toString())
         isCheckmate = false
         quizAttempts = 2
         quizLeft--
@@ -133,6 +134,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         _gameStarted.value = true
         idMatch = startMatchId()
         isStock = true
+        Log.i("STARTED QUIZ", isStock.toString())
         showDifficultyDialog()
     }
 
@@ -343,6 +345,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
         if (isQuiz) {
             bestMove = bestMoveQuiz(idMatch)
+            Log.i("BEST MOVE QUERY: ", bestMove)
 
             if(_quizEvent.value) {
                 _quizEvent.value = false
@@ -365,12 +368,15 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             if(promotionMoves.isEmpty()) {
                 if (checkMate(lastMove, "", idMatch)) {
                     currentSideToMove = board.sideToMove.toString()
+                    Log.i("I'm here", _checkmateEvent.value.toString())
                     showCheckmateDialog()
                 }
             }
         }
 
         else if(isQuiz){
+            Log.i("LAST MOVE: ", lastMove.toString())
+            Log.i("BEST MOVE: ", bestMove)
             if(transformInput(lastMove) != bestMove){
                 lastMove?.let { Log.i("MINE", it) }
                 showQuizDialog()
@@ -383,7 +389,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 }
             } else {
                 stockfishMove(lastMove, "", idMatch)
-
+                Log.i("QUIZ STOCK MOVE: ", stockMove)
                 if(isCheckmate){
                     if(quizAttempts == 2){
                         earnedPoints = 1.0
@@ -402,6 +408,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 }
                 else{
                     board.doMove(stockMove)
+                    hintShown = !hintShown
                     emitCurrentUI()
                 }
             }
@@ -409,6 +416,8 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         else if(isStock){
             stockfishMove(lastMove, "", idMatch)
+            Log.i("LAST MOVE: ", lastMove.toString())
+            Log.i("STOCK MOVE: ", stockMove)
             if(isCheckmate){
                 val winnerSide = if (board.sideToMove.toString() == "WHITE") "W" else "L"
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -589,22 +598,22 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //Trigger checkmate dialogue box
     fun showCheckmateDialog() {
-        _checkmateEvent.value = true
+        _checkmateEvent.value = !_checkmateEvent.value
     }
 
     //Trigger quiz dialogue box
     fun showQuizDialog() {
-        _quizEvent.value = true
+        _quizEvent.value = !_quizEvent.value
     }
 
     //Trigger quiz win dialogue box
     fun showQuizFinDialog(){
-        _quizFin.value = true
+        _quizFin.value = !_quizFin.value
     }
 
     //Trigger stock engine difficulty dialogue box
     fun showDifficultyDialog() {
-        _stockEvent.value = true
+        _stockEvent.value = !_stockEvent.value
     }
 
     //Trigger quiz hint dialogue box
@@ -612,8 +621,15 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         _hintEvent.value = !_hintEvent.value
     }
 
-    //Perform standard move or setup promotion pane
+    // Perform standard move or setup promotion pane
     private fun doMoveIfCan(square: Square) {
+        // Check if the selected square and target square are the same
+        if (selectedCell == square) {
+            // Reset the selected cell without doing any move
+            selectedCell = null
+            return
+        }
+
         val possibleMoves = board.legalMoves().filter {
             it.from == selectedCell && it.to == square
         }

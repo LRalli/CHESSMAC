@@ -98,13 +98,13 @@ fun ChessGameScreen(
     }
 
     if (checkmateEvent) {
-        chessGameViewModel.showCheckmateDialog()
         ShowCheckmateDialog(
             winner = if (currentSideToMove == "BLACK") "White" else "Black",
             onClose = {
                       if(quizLeft == 0){
                           chessGameViewModel.showQuizFinDialog()
                       }
+                      chessGameViewModel.showCheckmateDialog()
             },
             mode = mode,
             points = chessGameViewModel.earnedPoints
@@ -112,19 +112,17 @@ fun ChessGameScreen(
     }
 
     if (quizEvent) {
-        chessGameViewModel.showQuizDialog()
-        ShowQuizDialog(onClose = { Log.d("ChessGameScreen", "Dialog dismissed") },
+        ShowQuizDialog(onClose = { chessGameViewModel.showQuizDialog() },
                         attempts = chessGameViewModel.quizAttempts)
     }
 
     if (stockEvent) {
-        chessGameViewModel.showDifficultyDialog()
         ShowStockDifficultyDialog(
             onDifficultySelected = { difficulty ->
                 chessGameViewModel.setStockDifficulty(difficulty)
             },
             onClose = {
-                Log.d("ChessGameScreen", "Stock difficulty dialog dismissed")
+                chessGameViewModel.showDifficultyDialog()
             }
         )
     }
