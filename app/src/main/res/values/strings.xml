@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ChessMAC</string>
+    <string name="app_name">ChessWhiz</string>
 
     <string name="king_light">King light</string>
     <string name="queen_light">Queen light</string>

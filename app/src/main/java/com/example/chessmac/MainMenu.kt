@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -85,22 +86,38 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_logo),
-                contentDescription = "App Logo",
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .size(300.dp)
-            )
+            Spacer(modifier = Modifier.height(120.dp)) // Adjust this value as needed
+
+            Box { // Stack the two images
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(300.dp)
+                        .align(Alignment.Center)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.test_4),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(300.dp)
+                        .align(Alignment.Center)
+                        .offset(y = 150.dp) // Adjust this value as needed
+                )
+            }
+            Spacer(modifier = Modifier.height(70.dp)) // Add space between image and buttons
             Button(
                 onClick = {
                     val intent = Intent(activity, LocalGame::class.java)
                     activity.startActivity(intent)
                 },
-                modifier = Modifier.padding(8.dp).width(270.dp).height(55.dp),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .width(270.dp)
+                    .height(55.dp),
                 colors = customButtonColors
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -123,7 +140,10 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                     val intent = Intent(activity, StockGame::class.java)
                     activity.startActivity(intent)
                 },
-                modifier = Modifier.padding(8.dp).width(270.dp).height(55.dp),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .width(270.dp)
+                    .height(55.dp),
                 colors = customButtonColors
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -146,7 +166,10 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                     val intent = Intent(activity, Quiz::class.java)
                     activity.startActivity(intent)
                 },
-                modifier = Modifier.padding(8.dp).width(270.dp).height(55.dp),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .width(270.dp)
+                    .height(55.dp),
                 colors = customButtonColors
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -172,7 +195,9 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                 val intent = Intent(activity, Leaderboard::class.java)
                 activity.startActivity(intent)
             },
-            modifier = Modifier.padding(8.dp).align(Alignment.TopStart),
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.TopStart),
             colors = customButtonColors,
             shape = CircleShape,
             contentPadding = PaddingValues(16.dp)
@@ -189,7 +214,9 @@ fun Menu(activity: ComponentActivity, pokerMatTexture: Painter) {
                 val intent = Intent(activity, UserProfile::class.java)
                 activity.startActivity(intent)
             },
-            modifier = Modifier.padding(8.dp).align(Alignment.TopEnd),
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.TopEnd),
             colors = customButtonColors,
             shape = CircleShape,
             contentPadding = PaddingValues(16.dp)
@@ -214,7 +241,8 @@ fun MenuPreview() {
             elevation = 8.dp
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                val pokerMatTexture: Painter = rememberVectorPainter(image = Icons.Default.AccountCircle)
+                // Replace 'R.drawable.grass_image' with the actual resource ID of your grass image
+                val pokerMatTexture: Painter = painterResource(id = R.drawable.perfect_green_grass)
                 Menu(activity = activity, pokerMatTexture = pokerMatTexture)
             }
         }

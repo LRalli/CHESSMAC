@@ -19,6 +19,8 @@ class Login : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Hide the action bar
+        supportActionBar?.hide()
 
         firebaseAuth = FirebaseAuth.getInstance()
         binding.textView.setOnClickListener {

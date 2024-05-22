@@ -19,6 +19,9 @@ class Registration : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Hide the action bar
+        supportActionBar?.hide()
+
         binding = ActivityRegistrationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

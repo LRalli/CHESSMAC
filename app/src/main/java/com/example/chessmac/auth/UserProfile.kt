@@ -88,6 +88,9 @@ class UserProfile : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
+        // Hide the action bar
+        supportActionBar?.hide()
+
         profileImage = findViewById(R.id.profile_image)
         usernameTextView = findViewById(R.id.tvNickname)
         quizScoresTextView = findViewById(R.id.tvQuizScores)
