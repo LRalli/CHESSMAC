@@ -17,7 +17,6 @@ import com.example.chessmac.ui.utils.isShortCastleMove
 import com.example.chessmac.ui.utils.isLongCastleMove
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.DataSnapshot
@@ -122,7 +121,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         board.loadFromFen(fenString)
 
         isQuiz = true
-        Log.i("STARTED QUIZ", isQuiz.toString())
         isCheckmate = false
         quizAttempts = 2
         quizLeft--
@@ -134,7 +132,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         _gameStarted.value = true
         idMatch = startMatchId()
         isStock = true
-        Log.i("STARTED QUIZ", isStock.toString())
         showDifficultyDialog()
     }
 
@@ -159,14 +156,18 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     fun handleShake() {
         if (isQuiz){
             if (!hintShown && hintCount > 0) {
-                Log.i("SHAKE", hintCount.toString())
                 bestMove = bestMoveQuiz(idMatch)
-                Log.i("BEST_MOVE", bestMove)
                 showHintDialog()
                 hintCount--
                 emitCurrentUI()
                 hintShown = true
             }
+        }
+        else if (isStock){
+            bestMove = bestMoveQuiz(idMatch)
+            showHintDialog()
+            emitCurrentUI()
+            hintShown = true
         }
     }
 
@@ -227,7 +228,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         val job = viewModelScope.launch(Dispatchers.IO) { run {
             val name = "https://lralli.pythonanywhere.com" + "/info" + "?index=" + idMatch.toString() +
                        "&ELO=" + difficulty
-            Log.i("URL test", name)
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
             try {
@@ -277,11 +277,9 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
         if(move != null){
             val moveString = transformInput(move)
-            Log.i("MOVE_STRING", moveString.toString())
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/" + "?move=" +
                     "" + moveString + prom + "" + "&index=" + idString
-            Log.i("Test", name)
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
 
@@ -316,9 +314,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 return "00"
             }
 
-            Log.i("INPUT", input.toString())
             var dashIndex = input.indexOf('-')
-            Log.i("DASH_INDEX", dashIndex.toString())
             if (input.length > dashIndex + 10) {
                 dashIndex = input.indexOf('-', dashIndex + 1)
             }
@@ -347,7 +343,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
         if (isQuiz) {
             bestMove = bestMoveQuiz(idMatch)
-            Log.i("BEST MOVE QUERY: ", bestMove)
 
             if(_quizEvent.value) {
                 _quizEvent.value = false
@@ -378,7 +373,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             if(promotionMoves.isEmpty()) {
                 if (checkMate(lastMove, "", idMatch)) {
                     currentSideToMove = board.sideToMove.toString()
-                    Log.i("I'm here", _checkmateEvent.value.toString())
                     showCheckmateDialog()
                 }
             }
@@ -396,7 +390,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                     storeQuizScore()
                 }
             } else {
-                stockfishMove(lastMove, "", idMatch)
+                stockfishMove(lastMove, idMatch)
                 if(isCheckmate){
                     if(quizAttempts == 2){
                         earnedPoints = 1.0
@@ -422,7 +416,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
         }
 
         else if(isStock){
-            stockfishMove(lastMove, "", idMatch)
+            stockfishMove(lastMove, idMatch)
             if(isCheckmate){
                 val winnerSide = if (board.sideToMove.toString() == "WHITE") "W" else "L"
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -506,17 +500,13 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //Trigger stockfish to perform its best move, then return it
     private fun stockfishMove(move: String?,
-                              prom: String,
                               id: Int) {
 
         if(move != null){
             val moveString = transformInput(move)
-            Log.i("MOVE", move.toString())
-            Log.i("MOVE_STRING", moveString.toString())
             val idString = id.toString()
             val name = "https://lralli.pythonanywhere.com/stockfish" + "?move=" +
-                    "" + moveString + prom + "" + "&index=" + idString
-            Log.i("NAME", name)
+                    "" + moveString + "&index=" + idString
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
 
@@ -526,7 +516,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                         requestMethod = "POST"
                         val r = JSONObject(InputStreamReader(inputStream).readText())
                         val mate = r.get("mate") as String
-                        Log.i("MATE?", mate)
                         if(mate == "player" || mate == "stockfish"){
                             isCheckmate = true
                         }
