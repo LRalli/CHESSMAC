@@ -7,6 +7,7 @@ import com.example.chessmac.ui.board.PieceOnSquare
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 
+//Data class that encapsulates the state of the UI for a chess game.
 data class ChessGameUIState(
     val board: ChessBoard,
     val pieces: ImmutableList<PieceOnSquare>,

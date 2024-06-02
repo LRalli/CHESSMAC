@@ -1,6 +1,5 @@
 package com.example.chessmac.ui.board
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -25,37 +24,45 @@ private const val Z_INDEX_DRAGGING = 1f
 private const val SCALE_IDLE = 1f
 private const val SCALE_DRAGGING = 1.5f
 
+//Interface to handle user interactions on pieces.
 @Stable
 interface PieceListener {
     fun onTakePiece(square: Square)
     fun onReleasePiece(square: Square)
 }
 
+//Composable that represent a single piece on the board.
 @Composable
 fun Piece (
-    piece: PieceOnSquare,
-    squareSize: Dp,
-    chessBoard: ChessBoard,
-    listener: PieceListener,
-    dragPieceOverSquareListener: (Square) -> Unit,
-    modifier: Modifier = Modifier,
+    piece: PieceOnSquare,                               //Piece to be displayed.
+    squareSize: Dp,                                     //Size of square containing it.
+    chessBoard: ChessBoard,                             //Board on which to display it.
+    listener: PieceListener,                            //To handle user interactions.
+    dragPieceOverSquareListener: (Square) -> Unit,      //Lambda function to update square when piece is dragged over it.
+    modifier: Modifier = Modifier,                      //Modifier for composable.
 ) {
 
+    //Used to trigger changes in listener.
     val rememberedListener by rememberUpdatedState(listener)
 
+    //Handle square size based on screen density
     val squareSizePx = with(LocalDensity.current) {
         squareSize.toPx()
     }
 
+    //Get row and column indexes of square on the chessboard.
     val row = chessBoard.getRow(piece.square)
     val column = chessBoard.getColumn(piece.square)
 
+    //RememberStateUpdate to handle changes of x and y for the square.
     val x by rememberUpdatedState(column * squareSizePx)
     val y by rememberUpdatedState(row * squareSizePx)
 
+    //MutableState to handle changes of zIndex and scale of the piece.
     var zIndex by remember { mutableStateOf(Z_INDEX_IDLE) }
     var scale by remember { mutableStateOf(SCALE_IDLE) }
 
+    //Animatable to handle animation of piece's offset.
     val offset = remember {
         Animatable(
             Offset(x = column * squareSizePx, y = row * squareSizePx),
@@ -63,6 +70,7 @@ fun Piece (
         )
     }
 
+    //Fun to calculate square based on current offset value.
     fun calculateSquare(): Square {
 
         val row = ((offset.value.y + squareSizePx / 2) / squareSizePx).toInt()
@@ -71,10 +79,12 @@ fun Piece (
         return chessBoard[row, column]
     }
 
+    //Effect to animate piece to its initial position when the composable is first launched/when the piece's square changes.
     LaunchedEffect(key1 = piece.square) {
         offset.animateTo(Offset(x, y))
     }
 
+    //PieceImage composable to display Image of piece
     PieceImage(
         pieceType = piece.pieceType,
         modifier = modifier
@@ -82,16 +92,21 @@ fun Piece (
             .zIndex(zIndex)
             .scale(scale)
             .size(squareSize)
+            //PointerInput to detect drag gestures.
             .pointerInput(Unit) {
+                //use of coroutine to handle animations and state updates asynchronously,
+                // so that the main thread doesn't freeze.
                 coroutineScope {
+                    //Used to detect drag gestures, provides callbacks for different stages of drag process.
                     detectDragGestures(
+                        //Invoked when drag gesture starts.
                         onDragStart = {
                             zIndex = Z_INDEX_DRAGGING
                             scale = SCALE_DRAGGING
                             val square = calculateSquare()
                             rememberedListener.onTakePiece(square)
                         },
-
+                        //Invoked when drag gestue ends.
                         onDragEnd = {
                             zIndex = Z_INDEX_IDLE
                             scale = SCALE_IDLE
@@ -105,6 +120,7 @@ fun Piece (
                                 offset.animateTo(Offset(x, y))
                             }
                         },
+                        //Invoked if drag gesture is cancelled.
                         onDragCancel = {
                             zIndex = Z_INDEX_IDLE
                             scale = SCALE_IDLE
@@ -116,6 +132,7 @@ fun Piece (
                             }
                         }
                     )
+                    //lambda function invoked repeatedly as the drag gesture progresses.
                     { change, dragAmount ->
                         change.consume()
 

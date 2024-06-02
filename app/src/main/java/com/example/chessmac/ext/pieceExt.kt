@@ -3,6 +3,7 @@ package com.example.chessmac.ext
 import com.github.bhlangonijr.chesslib.Piece
 import com.example.chessmac.model.PieceType
 
+//Extension function to map Piece enum (used in chesslib) value to its corresponding PieceType enum value.
 fun Piece.toPieceType(): PieceType? {
 
     return when (this) {

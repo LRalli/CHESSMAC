@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.bhlangonijr.chesslib.Square
@@ -24,10 +23,13 @@ import com.example.chessmac.model.PieceType
 import com.example.chessmac.ui.theme.Copper
 import kotlinx.collections.immutable.*
 
+//Interface which defines methods for handling different events related to the chessboard.
 @Stable
 interface ChessBoardListener : PromotionPaneListener, PieceListener {
     fun onSquareClicked(square: Square)
 }
+
+//Interface used to as placeholder when the game is not started.
 
 object DummyChessBoardListener : ChessBoardListener {
     override fun onSquareClicked(square: Square) {}
@@ -36,33 +38,42 @@ object DummyChessBoardListener : ChessBoardListener {
     override fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String) {}
 }
 
+//Composable used to display Chessboard UI.
+
 @Composable
 fun ChessBoard(
-    chessBoard: ChessBoard,
-    pieces: ImmutableList<PieceOnSquare>,
-    selectedSquare: Square?,
-    squaresForMove: ImmutableSet<Square>,
-    promotions: ImmutableList<PieceType>,
-    squareSize: Dp,
-    listener: ChessBoardListener,
-    modifier: Modifier = Modifier
+    chessBoard: ChessBoard,                   //Board instance
+    pieces: ImmutableList<PieceOnSquare>,     //Pieces on board
+    selectedSquare: Square?,                  //Currently selected square
+    squaresForMove: ImmutableSet<Square>,     //List of valid moves from picked square
+    promotions: ImmutableList<PieceType>,     //List of possible promotions
+    squareSize: Dp,                           //Size of squares
+    listener: ChessBoardListener,             //Listener to handle user interactions
+    modifier: Modifier = Modifier             //Modifier for composable
 ) {
 
+    //Used to trigger changes in listener between Dummy and actual Chessboard listener
     val rememberedListener by rememberUpdatedState(listener)
 
+    //Handle square size based on screen density
     val squareSizePx = with(LocalDensity.current) {
         squareSize.toPx()
     }
+
+    //state holder that can be updated and observed by the composable, initialized with empty square.
     var dragOverSquare by remember { mutableStateOf(Square.NONE) }
+    //Lambda function that changes the state holder.
     val dragPieceOverSquareListener: (Square) -> Unit = { dragOverSquare = it }
 
-
+    //Box composable to draw chessboard.
     Box(
         modifier = modifier
             .size(squareSize * 8)
+            //Cached to reduce redundant draws.
             .drawWithCache {
                 val size = Size(squareSizePx, squareSizePx)
 
+                //Execute drawing commands.
                 onDrawBehind {
                     drawSquares(chessBoard, squareSizePx, size)
                     drawSelectedSquare(chessBoard, selectedSquare, squareSizePx, size)
@@ -71,7 +82,9 @@ fun ChessBoard(
                 }
             }
             .border(2.dp, color = Color.Black)
+            //Configure box to handle pointer input events.
             .pointerInput(Unit) {
+                //Detects tap gestures, upon which it retrieves square relative to tapped position and calls method.
                 detectTapGestures { offset ->
                     val row = (offset.y / squareSizePx).toInt()
                     val column = (offset.x / squareSizePx).toInt()
@@ -80,6 +93,8 @@ fun ChessBoard(
                 }
             }
     ) {
+        //Contents of box composable from here.
+        //Pieces to place on board.
         pieces.forEach { piece ->
             key(piece.id) {
                 Piece(
@@ -91,7 +106,7 @@ fun ChessBoard(
                 )
             }
         }
-
+        //Promotion pane UI.
         if (promotions.isNotEmpty()) {
             PromotionPane(
                 promotions = promotions,
@@ -118,6 +133,7 @@ private fun DrawScope.drawSquares(chessBoard: ChessBoard, squareSizePx: Float, s
     }
 }
 
+//Below functions handle board drawing. They are called by onDrawBehind block within drawWithCache.
 private fun DrawScope.drawSelectedSquare(
     chessBoard: ChessBoard,
     selectedSquare: Square?,

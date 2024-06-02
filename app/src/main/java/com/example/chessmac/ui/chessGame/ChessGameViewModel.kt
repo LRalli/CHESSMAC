@@ -23,6 +23,7 @@ import com.google.firebase.database.DataSnapshot
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,12 +46,13 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     private var isStock: Boolean = false
 
     private val chessBoard = ChessBoard()
-    private var board = Board()
+    var board = Board()
     private var idMatch: Int = 404
     private var fenString = ""
 
     private var selectedCell: Square? = null
     private var pieceId = 0
+    private var pieceSide: String? = null
     private var promotionMoves: List<Move> = emptyList()
     var currentSideToMove: String? = null
     var bestMove: String = ""
@@ -64,7 +66,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     private var hintShown: Boolean = false
     private var lastMove: String? = null
     private var stockDifficulty: String? = null
-    private var isCheckmate: Boolean = false
+    var isCheckmate: Boolean = false
     private var stockMove: String = ""
 
     private val _checkmateEvent = MutableStateFlow(false)
@@ -72,11 +74,15 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     private val _stockEvent = MutableStateFlow(false)
     private val _hintEvent = MutableStateFlow(false)
     private val _quizFin = MutableStateFlow(false)
+    private val _quizOver = MutableStateFlow(false)
+    private val _stockTurn = MutableStateFlow(false)
     val checkmateEvent: StateFlow<Boolean> = _checkmateEvent.asStateFlow()
     val quizEvent: StateFlow<Boolean> = _quizEvent.asStateFlow()
     val stockEvent: StateFlow<Boolean> = _stockEvent.asStateFlow()
     val hintEvent: StateFlow<Boolean> = _hintEvent.asStateFlow()
     val quizFin: StateFlow<Boolean> = _quizFin.asStateFlow()
+    val quizOver: StateFlow<Boolean> = _quizOver.asStateFlow()
+    val stockTurn: StateFlow<Boolean> = _stockTurn.asStateFlow()
 
     private val _uiState = MutableStateFlow(
         ChessGameUIState(
@@ -114,6 +120,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     fun startQuiz() {
         _gameStarted.value = true
         _checkmateEvent.value = false
+        _quizOver.value = false
 
         val quizData = getQuiz()
         fenString = quizData.first
@@ -327,6 +334,9 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //Actions to perform on click of screen (square)
     override fun onSquareClicked(square: Square) {
+        if(isStock && board.sideToMove.toString() == "BLACK"){
+            return
+        }
         if (board.getPiece(square).pieceSide == board.sideToMove) {
             selectedCell = square
         } else {
@@ -337,100 +347,119 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
 
     //Actions to perform on hold of screen (piece)
     override fun onTakePiece(square: Square) {
+        pieceSide = board.getPiece(square).pieceSide.toString()
         if (board.getPiece(square).pieceSide == board.sideToMove) {
+            if(isStock && board.sideToMove.toString() == "BLACK"){
+                return
+            }
             selectedCell = square
             emitCurrentUI()
-        }
-        if (isQuiz) {
-            bestMove = bestMoveQuiz(idMatch)
 
-            if(_quizEvent.value) {
-                _quizEvent.value = false
+            if (isQuiz) {
+                bestMove = bestMoveQuiz(idMatch)
+
+                if(_quizEvent.value) {
+                    _quizEvent.value = false
+                }
             }
-        }
 
-        if (isStock) {
-            if (_stockEvent.value){
-                _stockEvent.value = false
+            if (isStock) {
+                if (_stockEvent.value){
+                    _stockEvent.value = false
+                }
             }
         }
     }
 
     //Actions to perform on release of screen (piece)
     override fun onReleasePiece(square: Square) {
-        if (selectedCell != null && selectedCell == square) {
-            // If the last action was just picking up the piece and dropping it back,
-            // then don't check for move correctness
-            selectedCell = null
-            emitCurrentUI()
-            return
-        }
-
-        doMoveIfCan(square)
-        emitCurrentUI()
-
-        if(isLocal){
-            if(promotionMoves.isEmpty()) {
-                if (checkMate(lastMove, "", idMatch)) {
-                    currentSideToMove = board.sideToMove.toString()
-                    showCheckmateDialog()
-                }
-            }
-        }
-
-        else if(isQuiz && quizAttempts != 0){
-            if(transformInput(lastMove) != bestMove){
-                lastMove?.let { Log.i("MINE", it) }
-                showQuizDialog()
-                board.loadFromFen(fenString)
-                undoStockfish(idMatch, fenString)
-                quizAttempts -= 1
+        viewModelScope.launch {
+            if (selectedCell != null && selectedCell == square) {
+                // If the last action was just picking up the piece and dropping it back,
+                // then don't check for move correctness
+                selectedCell = null
                 emitCurrentUI()
-                if(quizAttempts == 0 && quizLeft == 1){
-                    storeQuizScore()
+                return@launch
+            }
+
+            if (pieceSide == board.sideToMove.toString()){
+                if(isStock && board.sideToMove.toString() == "BLACK"){
+                    return@launch
                 }
-            } else {
-                stockfishMove(lastMove, idMatch)
-                if(isCheckmate){
-                    if(quizAttempts == 2){
-                        earnedPoints = 1.0
-                        quizScore += earnedPoints
+
+                doMoveIfCan(square)
+                emitCurrentUI()
+
+                if(isLocal){
+                    if(promotionMoves.isEmpty()) {
+                        if (checkMate(lastMove, "", idMatch)) {
+                            currentSideToMove = board.sideToMove.toString()
+                            showCheckmateDialog()
+                        }
+                    }
+                }
+
+                else if(isQuiz && quizAttempts != 0){
+                    if(transformInput(lastMove) != bestMove){
+                        lastMove?.let { Log.i("MINE", it) }
+                        showQuizDialog()
+                        board.loadFromFen(fenString)
+                        undoStockfish(idMatch, fenString)
+                        quizAttempts -= 1
+                        emitCurrentUI()
+                        if(quizAttempts == 0){
+                            if(quizLeft == 1){
+                                storeQuizScore()
+                            }
+                            _quizOver.value = !_quizOver.value
+                        }
                     } else {
-                        earnedPoints = 0.5
-                        quizScore += earnedPoints
-                    }
-                    currentSideToMove = board.sideToMove.toString()
-                    showCheckmateDialog()
-                    quizAttempts = 0
+                        stockfishMove(lastMove, idMatch)
+                        if(isCheckmate){
+                            if(quizAttempts == 2){
+                                earnedPoints = 1.0
+                                quizScore += earnedPoints
+                            } else {
+                                earnedPoints = 0.5
+                                quizScore += earnedPoints
+                            }
+                            currentSideToMove = board.sideToMove.toString()
+                            showCheckmateDialog()
+                            _quizOver.value = !_quizOver.value
 
-                    if(quizLeft==0){
-                        storeQuizScore()
+                            if(quizLeft==0){
+                                storeQuizScore()
+                            }
+                        }
+                        else{
+                            delay(500)
+                            board.doMove(stockMove)
+                            hintShown = !hintShown
+                            emitCurrentUI()
+                        }
                     }
                 }
-                else{
-                    board.doMove(stockMove)
-                    hintShown = !hintShown
-                    emitCurrentUI()
-                }
-            }
-        }
 
-        else if(isStock){
-            stockfishMove(lastMove, idMatch)
-            if(isCheckmate){
-                val winnerSide = if (board.sideToMove.toString() == "WHITE") "W" else "L"
-                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val difficulty = if (stockDifficulty == "600") "Easy" else if (stockDifficulty == "1300") "Medium" else "Hard"
-                val historyInfo = "$winnerSide/$difficulty/$currentDate"
-                storeGameHistory(historyInfo)
+                else if(isStock){
+                    _stockTurn.value = !_stockTurn.value
+                    stockfishMove(lastMove, idMatch)
+                    if(isCheckmate){
+                        val winnerSide = if (board.sideToMove.toString() == "WHITE") "W" else "L"
+                        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        val difficulty = if (stockDifficulty == "600") "Easy" else if (stockDifficulty == "1300") "Medium" else "Hard"
+                        val historyInfo = "$winnerSide/$difficulty/$currentDate"
+                        storeGameHistory(historyInfo)
 
-                currentSideToMove = if (board.sideToMove.toString() == "BLACK") "WHITE" else "BLACK"
-                showCheckmateDialog()
-            }
-            else {
-                if (stockMove!="") {
-                    board.doMove(stockMove)
-                    emitCurrentUI()
+                        currentSideToMove = if (board.sideToMove.toString() == "BLACK") "WHITE" else "BLACK"
+                        showCheckmateDialog()
+                    }
+                    else {
+                        if (stockMove!="") {
+                            board.doMove(stockMove)
+                            emitCurrentUI()
+                        }
+                    }
+                    _stockTurn.value = !_stockTurn.value
                 }
             }
         }
@@ -499,9 +528,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
     }
 
     //Trigger stockfish to perform its best move, then return it
-    private fun stockfishMove(move: String?,
-                              id: Int) {
-
+    private suspend fun stockfishMove(move: String?, id: Int) {
         if(move != null){
             val moveString = transformInput(move)
             val idString = id.toString()
@@ -510,7 +537,7 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
             val url = URL(name)
             val conn = url.openConnection() as HttpsURLConnection
 
-            val job = viewModelScope.launch(Dispatchers.IO){ run {
+            withContext(Dispatchers.IO) {
                 try {
                     conn.run {
                         requestMethod = "POST"
@@ -526,10 +553,6 @@ class ChessGameViewModel: ViewModel(), ChessBoardListener {
                 } catch (e: Exception) {
                     Log.e("Move error: ", e.toString())
                 }
-            }
-            }
-            runBlocking {
-                job.join()
             }
         }
     }

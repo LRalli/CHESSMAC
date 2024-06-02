@@ -15,14 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chessmac.R
 import com.example.chessmac.customFontFamily
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
+//Composable for History section.
 @Composable
 fun GameHistory(
     history: ImmutableList<String>,
@@ -30,12 +29,14 @@ fun GameHistory(
 ) {
     val listState = rememberLazyListState()
 
+    //LazyColumn composable is used to display a vertically scrolling list of items efficiently.
     LazyColumn(
         state = listState,
         modifier = modifier
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        // Title text
         item {
             Text(
                 text = stringResource(R.string.moves_title),
@@ -43,11 +44,12 @@ fun GameHistory(
                 style = TextStyle(fontSize = 16.sp, fontFamily = customFontFamily)
             )
         }
+        // History items
         items(history) { item ->
             GameHistoryItem(item)
         }
     }
-
+    // Scroll to the bottom when the history changes
     LaunchedEffect(history) {
         if (history.isNotEmpty()) {
             listState.scrollToItem(history.lastIndex)
@@ -55,6 +57,7 @@ fun GameHistory(
     }
 }
 
+//Composable for single move string.
 @Composable
 fun GameHistoryItem(
     historyItem: String,

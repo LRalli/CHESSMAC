@@ -1,18 +1,15 @@
 package com.example.chessmac.ui.board
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.chessmac.R
 import com.example.chessmac.model.PieceType
 
+//Composable responsible for displaying the image of a chess piece based on its type.
 @Composable
 fun PieceImage(
     pieceType: PieceType,
@@ -26,6 +23,7 @@ fun PieceImage(
     )
 }
 
+//Helper function to map a PieceType to a corresponding drawable resource.
 private fun getPieceTypeImageRes(pieceType: PieceType): Int =
     when (pieceType) {
         PieceType.KING_LIGHT -> R.drawable.king_light
@@ -42,6 +40,7 @@ private fun getPieceTypeImageRes(pieceType: PieceType): Int =
         PieceType.PAWN_DARK -> R.drawable.pawn_dark
     }
 
+//Helper function to map a PieceType to a corresponding string resource for accessibility.
 private fun getPieceTypeDescriptionRes(pieceType: PieceType): Int =
     when (pieceType) {
         PieceType.KING_LIGHT -> R.string.king_light

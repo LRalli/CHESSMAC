@@ -1,5 +1,6 @@
 package com.example.chessmac.model
 
+//Enums used to represent pieces on the board.
 enum class PieceType {
     KING_LIGHT,
     QUEEN_LIGHT,

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +36,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.example.chessmac.R
 import com.example.chessmac.utils.Leaderboard
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChessGameScreen(
@@ -61,6 +63,8 @@ fun ChessGameScreen(
     val stockEvent by chessGameViewModel.stockEvent.collectAsState()
     val hintEvent by chessGameViewModel.hintEvent.collectAsState()
     val quizFin by chessGameViewModel.quizFin.collectAsState()
+    val quizOver by chessGameViewModel.quizOver.collectAsState()
+    val stockTurn by chessGameViewModel.stockTurn.collectAsState()
 
     val currentSideToMove = chessGameViewModel.currentSideToMove
     val bestMove = chessGameViewModel.bestMove
@@ -140,6 +144,8 @@ fun ChessGameScreen(
                     game = game,
                     listener = chessGameViewModel,
                     gameStarted = gameStarted,
+                    quizOver = quizOver,
+                    stockTurn = stockTurn,
                     viewModel = chessGameViewModel)
 }
 
@@ -149,6 +155,8 @@ fun ChessGameScreen(
     game: ChessGameUIState,
     listener: ChessBoardListener,
     gameStarted: Boolean,
+    quizOver: Boolean,
+    stockTurn: Boolean,
     viewModel: ChessGameViewModel
 ) {
 
@@ -229,6 +237,16 @@ fun ChessGameScreen(
                         listener = effectiveListener,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+
+                    var initialSide by remember { mutableStateOf<String?>(null) }
+
+                    // Initialize the initialSide when the game starts or when a new quiz starts
+                    LaunchedEffect(gameStarted, viewModel.quizAttempts) {
+                        if (gameStarted && initialSide == null) {
+                            initialSide = viewModel.board.sideToMove.toString()
+                        }
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -242,6 +260,17 @@ fun ChessGameScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
+                        if (gameStarted && !viewModel.isCheckmate) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text(
+                                text = "You are playing as: ${initialSide ?: ""}",
+                                style = TextStyle(
+                                    fontSize = 18.sp,
+                                    fontFamily = com.example.chessmac.customFontFamily
+                                ),
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
                     Row(
                         modifier = Modifier
@@ -251,6 +280,7 @@ fun ChessGameScreen(
                         Button(
                             onClick = {
                                 viewModel.startQuiz()
+                                initialSide = viewModel.board.sideToMove.toString()
                             },
                             enabled = !gameStarted,
                             modifier = Modifier
@@ -266,8 +296,10 @@ fun ChessGameScreen(
                         Button(
                             onClick = {
                                 viewModel.startQuiz()
+                                initialSide =
+                                    viewModel.board.sideToMove.toString()
                             },
-                            enabled = viewModel.quizAttempts == 0,
+                            enabled = quizOver,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 4.dp),
@@ -321,6 +353,23 @@ fun ChessGameScreen(
                         listener = effectiveListener,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp, top = 8.dp)
+                    ) {
+                        if(stockTurn){
+                            Text(
+                                text = "Stock is thinking",
+                                style = TextStyle(
+                                    fontSize = 18.sp,
+                                    fontFamily = com.example.chessmac.customFontFamily
+                                ),
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                            AnimatedEllipsis()
+                        }
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -441,6 +490,15 @@ fun ChessGameScreen(
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
 
+                    var initialSide by remember { mutableStateOf<String?>(null) }
+
+                    // Initialize the initialSide when the game starts or when a new quiz starts
+                    LaunchedEffect(gameStarted, viewModel.quizAttempts) {
+                        if (gameStarted && initialSide == null) {
+                            initialSide = viewModel.board.sideToMove.toString()
+                        }
+                    }
+
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -449,11 +507,38 @@ fun ChessGameScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, top = 8.dp)
+                        ) {
+                            repeat(viewModel.hintCount) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.interrogation_mark_1),
+                                    contentDescription = "Hint",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            if (gameStarted && !viewModel.isCheckmate) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "You are playing as: ${initialSide ?: ""}",
+                                    style = TextStyle(
+                                        fontSize = 18.sp,
+                                        fontFamily = com.example.chessmac.customFontFamily
+                                    ),
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(top = 8.dp)
                         ) {
                             Button(
                                 onClick = {
                                     viewModel.startQuiz()
+                                    initialSide = viewModel.board.sideToMove.toString()
                                 },
                                 enabled = !gameStarted,
                                 modifier = Modifier
@@ -469,8 +554,10 @@ fun ChessGameScreen(
                             Button(
                                 onClick = {
                                     viewModel.startQuiz()
+                                    initialSide =
+                                        viewModel.board.sideToMove.toString()
                                 },
-                                enabled = viewModel.quizAttempts == 0,
+                                enabled = quizOver,
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(start = 4.dp),
@@ -480,19 +567,6 @@ fun ChessGameScreen(
                                     text = "Next quiz",
                                     color = Color.White,
                                 )
-                            }
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            repeat(viewModel.hintCount) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.interrogation_mark_1),
-                                    contentDescription = "Hint",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
                             }
                         }
                         Row(
@@ -544,6 +618,23 @@ fun ChessGameScreen(
                             .weight(1f)
                             .padding(8.dp)
                     ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            if (stockTurn) {
+                                Text(
+                                    text = "Stock is thinking",
+                                    style = TextStyle(
+                                        fontSize = 18.sp,
+                                        fontFamily = com.example.chessmac.customFontFamily
+                                    ),
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+                                AnimatedEllipsis()
+                            }
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -819,4 +910,23 @@ fun ShowStockDifficultyDialog(
             modifier = Modifier.padding(16.dp)
         )
     }
+}
+
+@Composable
+fun AnimatedEllipsis() {
+    var ellipsis by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            ellipsis = when (ellipsis) {
+                "" -> "."
+                "." -> ".."
+                ".." -> "..."
+                else -> ""
+            }
+            delay(500)
+        }
+    }
+
+    Text(text = ellipsis, style = TextStyle(fontSize = 18.sp, fontFamily = com.example.chessmac.customFontFamily))
 }

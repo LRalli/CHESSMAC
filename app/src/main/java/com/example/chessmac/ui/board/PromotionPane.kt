@@ -1,7 +1,5 @@
 package com.example.chessmac.ui.board
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -9,19 +7,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.chessmac.model.PieceType
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
+//Functional interface to handle user interaction.
 @Stable
 fun interface PromotionPaneListener {
     fun onPromotionPieceTypeSelected(pieceType: PieceType, promotionString: String)
 }
 
+//Promotion Pane composable.
 @Composable
 fun PromotionPane(
     promotions: ImmutableList<PieceType>,
@@ -36,6 +33,7 @@ fun PromotionPane(
 
         promotions.forEach { pieceType ->
             val promotionString = getPromotionString(pieceType)
+            //Draw piece within Pane.
             PieceImage(
                 pieceType = pieceType,
                 modifier = itemModifier
@@ -45,6 +43,7 @@ fun PromotionPane(
     }
 }
 
+//Map each choice of piece to a string.
 private fun getPromotionString(pieceType: PieceType): String {
     return when (pieceType) {
         PieceType.QUEEN_DARK, PieceType.QUEEN_LIGHT -> "Q"
