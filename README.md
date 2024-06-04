@@ -20,6 +20,7 @@ Challenge yourself with 10 quizzes per session.
 Track and compare your scores with other players to see who ranks the best.
 
 <h2 align="center">NAVGRAPH</h2>
+
 ![ChessWhiz](https://github.com/LRalli/ChessWhiz/blob/master/docs/NavGraph.png)
 
 <h2 align="center">AUTHORS</h2>
