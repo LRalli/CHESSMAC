@@ -14,5 +14,6 @@ Challenge yourself with 10 quizzes per session.
   - Use up to 3 hints per session by shaking your device for the next move.
 
   <h2 align="center">AUTHORS</h2>
+  
   - Ralli Lorenzo (1853661)
   - Antonio La Torre (2067686)
