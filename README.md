@@ -9,7 +9,10 @@ Play 1v1 against a local opponent, or against the CPU.
   - Select from three difficulty levels: easy, medium, or hard.
   - Shake your device to reveal the best move during training.
 
+
   <br>
+
+
 
 <h2 align="center">QUIZ MODE</h2>
 Challenge yourself with 10 quizzes per session.
@@ -17,7 +20,13 @@ Challenge yourself with 10 quizzes per session.
   - You have 2 attempts per quiz; a perfect run earns 1 point, while any finished run with a mistake scores 0.5 points.
   - Use up to 3 hints per session by shaking your device for the next move.
 
+
+  ### Quiz Leaderboard
+  Track and compare your scores with other players to see who ranks the best.
+
+
   <br>
+
 
   <h2 align="center">AUTHORS</h2>
   
